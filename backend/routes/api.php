@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\FundAccountController;
 
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
@@ -19,6 +20,10 @@ Route::middleware('auth:sanctum')->group(function(){
         // ADMIN duyệt tổ chức
         Route::post('/admin/organization/{id}/approve', [OrganizationController::class, 'approve']);
         Route::post('/admin/organization/{id}/reject', [OrganizationController::class, 'reject']);
+
+        // ADMIN duyệt tài khoản gây quỹ
+        Route::post('/fund-accounts/{id}/approve', [FundAccountController::class, 'approve']);
+        Route::post('/fund-accounts/{id}/lock', [FundAccountController::class, 'lock']);
     });
 
     Route::middleware('role:NGUOI_DUNG')->group(function(){
@@ -30,5 +35,11 @@ Route::middleware('auth:sanctum')->group(function(){
         //đăng ký tổ chức
         Route::post('/organization/register', [OrganizationController::class, 'register']);
         Route::get('/organization/status', [OrganizationController::class, 'status']);
-    });    
+    });
+    
+    Route::middleware('role:TO_CHUC')->group(function(){
+        //tài khoản gây quỹ       
+        Route::post('/fund-accounts', [FundAccountController::class, 'store']);
+        Route::get('/fund-accounts/me', [FundAccountController::class, 'me']);
+   });
 });

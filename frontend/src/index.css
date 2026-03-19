@@ -52,20 +52,17 @@
 
 body {
   margin: 0;
+  overflow-x: hidden;
 }
 
 #root {
   width: 100%;
-  max-width: 1126px;
-  margin: 0 auto;
-  padding: 0 16px;
+  margin: 0;
+  padding: 0;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  @media (min-width: 1025px) {
-    border-inline: 1px solid var(--border);
-  }
 }
 
 h1,
@@ -113,7 +110,11 @@ code {
 }
 
 .page {
-  padding: 24px 0;
+  width: 100%;
+  max-width: 1126px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
 }
 
 .page--center {
@@ -188,4 +189,10 @@ code {
 
 .section {
   padding: 16px 0;
+}
+
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 }

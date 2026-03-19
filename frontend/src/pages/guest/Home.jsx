@@ -1,22 +1,18 @@
+import CampaignList from "../../components/CampaignList/index.jsx";
+import Header from "../../components/Header/index.jsx";
+import Footer from "../../components/Footer/index.jsx";
+import OrganizationList from "../../components/OrganizationList/index.jsx";
+import MeNu from "../../components/Menu/index.jsx";
+
 export default function GuestHomePage() {
   return (
-    <div className="page page--center">
-      <h1>Trang vãng lai</h1>
-      <p className="muted">Public route</p>
-      <div className="links">
-        <a className="link" href="/login">
-          Đi tới /login
-        </a>
-        <a className="link" href="/app">
-          Đi tới /app
-        </a>
-        <a className="link" href="/org">
-          Đi tới /org
-        </a>
-        <a className="link" href="/admin">
-          Đi tới /admin
-        </a>
-      </div>
-    </div>
-  )
+    <>
+      <Header />
+      <MeNu />
+      <CampaignList fullBleed maxWidth="100%" title={null} />
+      <OrganizationList fullBleed maxWidth="100%" title={null} />
+      <Footer />
+
+    </>
+  );
 }

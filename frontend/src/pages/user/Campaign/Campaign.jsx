@@ -324,7 +324,7 @@ export default function Campaign() {
         <section className="camp-section">
           <div className="camp-section__header">
             <h2 className="camp-section__title">TỔ CHỨC TỪ THIỆN</h2>
-            <a href="#" className="camp-section__view-all">
+            <a href="chien-dich/to-chuc" className="camp-section__view-all">
               Xem tất cả <FiChevronRight size={14} />
             </a>
           </div>

@@ -8,7 +8,6 @@ import {
   FiMail,
   FiChevronLeft,
   FiChevronRight,
-  FiShield,
   FiUsers,
   FiAward,
   FiInfo,

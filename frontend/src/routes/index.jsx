@@ -9,6 +9,7 @@ import MainLayout from "../layouts/MainLayout";
 // Pages
 import HomePage from "../pages/guest/Home/Home.jsx";
 import CampaignPage from "../pages/user/Campaign/Campaign.jsx";
+import OrganizationList from "../pages/user/OrganizationList/OrganizationList.jsx";
 import CampaignList from "../pages/guest/CampaignList/CampaignList.jsx";
 import CampaignDetail from "../pages/guest/CampaignDetail/CampaignDetail.jsx";
 
@@ -52,6 +53,16 @@ const privateRoutes = [
       <ProtectedRoute>
         <MainLayout>
           <CampaignPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/chien-dich/to-chuc",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <OrganizationList />
         </MainLayout>
       </ProtectedRoute>
     ),

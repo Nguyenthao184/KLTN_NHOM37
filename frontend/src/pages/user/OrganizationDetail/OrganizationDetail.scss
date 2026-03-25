@@ -609,51 +609,49 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 
   &__banner {
-    background: linear-gradient(135deg, #fff0f0, #ffe4e4);
-    padding: 16px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid rgba(255, 77, 79, 0.1);
     position: relative;
+    width: 100%;
+    height: 140px;
+    border-radius: 16px;
     overflow: hidden;
   }
 
-  &__banner-icon {
-    font-size: 40px;
-    animation: bounce-icon 2s ease-in-out infinite;
-
-    @keyframes bounce-icon {
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-5px);
-      }
-    }
+  &__banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
   }
 
-  &__banner-text {
-    flex: 1;
+  &__banner:hover &__banner-img {
+    transform: scale(1.05);
+  }
+
+  &__banner-overlay {
+    position: absolute;
+    inset: 0;
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    justify-content: right;
+    margin-right: 40px;
+  }
+
+  &__banner-content {
+    text-align: center;
+    color: #333;
   }
 
   &__banner-label {
-    font-size: 11px;
-    color: rgba(0, 0, 0, 0.45);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    display: block;
+    font-size: 13px;
+    opacity: 0.9;
   }
 
   &__banner-value {
-    font-size: 18px;
-    font-weight: 900;
-    color: #ff4d4f;
-    letter-spacing: -0.3px;
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 4px;
   }
 
   &__banner-deco {
@@ -703,7 +701,7 @@
 
   &__item-value {
     font-size: 22px;
-    font-weight: 900;
+    font-weight: 700;
     color: #1a1a1a;
     line-height: 1;
   }
@@ -719,5 +717,73 @@
     height: 40px;
     background: #f0f0f0;
     margin: 0 16px;
+  }
+
+  &__banner-value {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 4px;
+
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+}
+
+.od-banner-float {
+  position: absolute;
+  color: #ff1515;
+  opacity: 0.8;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+  animation: floatUp 6s linear infinite;
+}
+
+.icon-1 {
+  left: 30%;
+  bottom: 0;
+  font-size: 30px;
+  animation-delay: 0s;
+}
+
+.icon-2 {
+  left: 50%;
+  bottom: -10px;
+  font-size: 36px;
+  animation-delay: 2s;
+}
+
+.icon-3 {
+  left: 80%;
+  bottom: -5px;
+  font-size: 40px;
+  animation-delay: 4s;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-40px) scale(1);
+  }
+  100% {
+    transform: translateY(-80px) scale(0.9);
+    opacity: 0;
   }
 }

@@ -34,4 +34,9 @@ class User extends Authenticatable
             'vai_tro_id'
         );
     }
+
+    public function toChuc()
+    {
+        return $this->hasOne(ToChuc::class, 'nguoi_dung_id');
+    }
 }

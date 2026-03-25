@@ -16,7 +16,16 @@ class FundAccountController extends Controller
     // Lấy tài khoản
     public function me()
     {
-        $account = TaiKhoanGayQuy::where('nguoi_dung_id', auth()->id())
+        $user = auth()->user();
+        $toChuc = $user->toChuc;
+
+        if (!$toChuc) {
+            return response()->json([
+                'message' => 'Bạn chưa phải tổ chức'
+            ], 403);
+        }
+
+        $account = TaiKhoanGayQuy::where('to_chuc_id', $toChuc->id)
             ->first();
 
         if (!$account) {
@@ -32,9 +41,16 @@ class FundAccountController extends Controller
     public function store(StoreFundAccountRequest $request)
     {
         $user = auth()->user();
+        $toChuc = $user->toChuc;
+
+        if (!$toChuc) {
+            return response()->json([
+                'message' => 'Bạn chưa phải tổ chức'
+            ], 403);
+        }
 
         // Không cho tạo nhiều tài khoản
-        $exists = TaiKhoanGayQuy::where('nguoi_dung_id', $user->id)
+        $exists = TaiKhoanGayQuy::where('to_chuc_id', $toChuc->id)
             ->whereIn('trang_thai', ['CHO_DUYET', 'HOAT_DONG'])
             ->exists();
 
@@ -45,7 +61,7 @@ class FundAccountController extends Controller
         }
 
         $account = TaiKhoanGayQuy::create([
-            'nguoi_dung_id' => $user->id,
+            'to_chuc_id' => $toChuc->id,
             'ten_quy' => $request->ten_quy,
             'ngan_hang' => 'MBBank',
             'so_tai_khoan' => null,
@@ -73,7 +89,7 @@ class FundAccountController extends Controller
         }
 
         // FAKE TẠO TÀI KHOẢN MB
-        $mb = $this->fakeMBBank($tk->ten_quy, $tk->user);
+        $mb = $this->fakeMBBank($tk->ten_quy, $tk->toChuc->user);
 
         // NỘI DUNG QR
         $qrContent = json_encode([

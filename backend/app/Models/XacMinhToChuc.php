@@ -18,4 +18,9 @@ class XacMinhToChuc extends Model
         'duyet_boi',
         'duyet_luc'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'nguoi_dung_id');
+    }
 }

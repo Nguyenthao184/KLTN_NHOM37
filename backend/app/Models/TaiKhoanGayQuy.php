@@ -9,7 +9,7 @@ class TaiKhoanGayQuy extends Model
     protected $table = 'tai_khoan_gay_quy';
 
     protected $fillable = [
-        'nguoi_dung_id',
+        'to_chuc_id',
         'ten_quy',
         'ngan_hang',
         'so_tai_khoan',
@@ -20,8 +20,8 @@ class TaiKhoanGayQuy extends Model
         'ma_yeu_cau_mb'
     ];
 
-    public function user()
+    public function toChuc()
     {
-        return $this->belongsTo(User::class, 'nguoi_dung_id');
+        return $this->belongsTo(ToChuc::class, 'to_chuc_id');
     }
 }

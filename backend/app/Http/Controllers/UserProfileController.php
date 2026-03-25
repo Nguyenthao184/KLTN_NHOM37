@@ -7,6 +7,7 @@ use App\Http\Requests\User\ChangePasswordRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ToChuc;
 
 class UserProfileController extends Controller
 {
@@ -15,11 +16,14 @@ class UserProfileController extends Controller
     {
         $user = Auth::user();
 
+        // load quan hệ
+        $user->load(['toChuc.taiKhoanGayQuy']);
+
         return response()->json([
             'user' => $user,
-            'avatar_url' => $user->anh_dai_dien 
-                ? asset('storage/'.$user->anh_dai_dien)
-                : null
+            'avatar_url' => $user->anh_dai_dien
+                ? asset('storage/' . $user->anh_dai_dien)
+                : null,
         ]);
     }
 
@@ -28,36 +32,62 @@ class UserProfileController extends Controller
     {
         $user = Auth::user();
 
-        $data = $request->except('anh_dai_dien');
+        // UPDATE USER
+        $userData = $request->only([
+            'ho_ten'
+        ]);
 
-        /**
-         * Upload avatar
-         */
         if ($request->hasFile('anh_dai_dien')) {
 
-            // xóa avatar cũ
             if ($user->anh_dai_dien && Storage::disk('public')->exists($user->anh_dai_dien)) {
                 Storage::disk('public')->delete($user->anh_dai_dien);
             }
 
-            // upload avatar mới
-            $path = $request->file('anh_dai_dien')->store('avatars', 'public');
+            $userData['anh_dai_dien'] = $request->file('anh_dai_dien')
+                ->store('avatars', 'public');
+        }
 
-            $data['anh_dai_dien'] = $path;
+        if (!empty(array_filter($userData))) {
+            $user->update($userData);
+        }
+
+        //UPDATE TO_CHUC (nếu có)
+
+        $toChuc = $user->toChuc;
+
+        if ($toChuc) {
+
+            $orgData = $request->only([
+                'email',
+                'mo_ta',
+                'dia_chi',
+                'so_dien_thoai'
+            ]);
+
+            if ($request->hasFile('logo')) {
+
+                if ($toChuc->logo && Storage::disk('public')->exists($toChuc->logo)) {
+                    Storage::disk('public')->delete($toChuc->logo);
+                }
+
+                $orgData['logo'] = $request->file('logo')
+                    ->store('logos', 'public');
+            }
+
+            // chỉ update khi có data
+            if (!empty(array_filter($orgData))) {
+                $toChuc->update($orgData);
+            }
         }
 
         /**
-         * update user
+         * ========================
+         * RESPONSE
+         * ========================
          */
-        $user->update($data);
-        $user->refresh();
-
         return response()->json([
             'message' => 'Cập nhật profile thành công',
-            'user' => $user,
-            'avatar_url' => $user->anh_dai_dien 
-                ? asset('storage/'.$user->anh_dai_dien)
-                : null
+            'user' => $user->fresh()->load('toChuc')
         ]);
     }
 

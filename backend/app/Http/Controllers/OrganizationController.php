@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\XacMinhToChuc;
 use App\Models\TaiKhoanGayQuy;
+use App\Models\ToChuc;
 use App\Http\Requests\Organization\OrganizationRegisterRequest;
 use Illuminate\Support\Facades\DB;
 
@@ -67,7 +68,7 @@ class OrganizationController extends Controller
         DB::beginTransaction();
 
         try {
-            $org = XacMinhToChuc::findOrFail($id);
+            $org = XacMinhToChuc::with('user')->findOrFail($id);
 
             // nếu đã xử lý rồi thì không duyệt lại
             if ($org->trang_thai !== 'CHO_XU_LY') {
@@ -88,6 +89,17 @@ class OrganizationController extends Controller
                 'nguoi_dung_id' => $org->nguoi_dung_id,
                 'vai_tro_id' => 3, 
             ]);
+
+            ToChuc::updateOrCreate(
+                ['nguoi_dung_id' => $org->nguoi_dung_id],
+                [
+                    'xac_minh_to_chuc_id' => $org->id,
+                    'ten_to_chuc' => $org->ten_to_chuc,
+                    'email' => $org->user->email,
+                    'trang_thai' => 'HOAT_DONG'
+                ]
+            );
+
 
             DB::commit();
 

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tai_khoan_gay_quy', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->cascadeOnDelete();
+            $table->foreignId('to_chuc_id')->constrained('to_chuc')->cascadeOnDelete();
 
             $table->string('ten_quy');
             $table->string('ngan_hang')->default('MB Bank');

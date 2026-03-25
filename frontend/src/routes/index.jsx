@@ -13,6 +13,7 @@ import OrganizationList from "../pages/user/OrganizationList/OrganizationList.js
 import OrganizationDetail from "../pages/user/OrganizationDetail/OrganizationDetail.jsx";
 import CampaignList from "../pages/guest/CampaignList/CampaignList.jsx";
 import CampaignDetail from "../pages/guest/CampaignDetail/CampaignDetail.jsx";
+import CreateCampaign  from "../pages/organization/CreateCampaign/CreateCampaign.jsx";
 
 // ================== PUBLIC ROUTES ==================
 const publicRoutes = [
@@ -74,6 +75,16 @@ const privateRoutes = [
       <ProtectedRoute>
         <MainLayout>
           <OrganizationDetail />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/chien-dich/tao-moi",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <CreateCampaign />
         </MainLayout>
       </ProtectedRoute>
     ),

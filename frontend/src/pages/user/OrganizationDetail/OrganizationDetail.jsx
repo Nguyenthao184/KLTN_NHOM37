@@ -10,11 +10,13 @@ import {
 } from "react-icons/fi";
 import { LuShieldCheck } from "react-icons/lu";
 import { FiCheckCircle, FiClock } from "react-icons/fi";
+import { FiGift, FiStar } from "react-icons/fi";
 import { MdCampaign } from "react-icons/md";
 import { BsBalloonHeartFill } from "react-icons/bs";
 import { MdOutlineMarkEmailRead, MdOutlinePhoneInTalk } from "react-icons/md";
 import { formatVnd } from "../../../utils/format";
 import qr from "../../../assets/user/qr.png";
+import banner3 from "../../../assets/user/banner3.jpg";
 import "./OrganizationDetail.scss";
 
 const ORG = {
@@ -271,19 +273,28 @@ export default function OrganizationDetail() {
             <div className="od-bank-card__shimmer" />
             <div className="od-bank-card__balance-label">
               Tên tài khoản:
-              <div className="od-bank-card__balance" style={{color: "#515050"}}>
+              <div
+                className="od-bank-card__balance"
+                style={{ color: "#515050" }}
+              >
                 {ORG.accountName}
               </div>
             </div>
             <div className="od-bank-card__balance-label">
               Số tài khoản:
-              <div className="od-bank-card__balance" style={{color: "#515050"}}>
+              <div
+                className="od-bank-card__balance"
+                style={{ color: "#515050" }}
+              >
                 {ORG.accountNumber}
               </div>
             </div>
             <div className="od-bank-card__balance-label">
               Số dư hiện tại:
-              <div className="od-bank-card__balance" style={{color: "#ff4d4f"}}>
+              <div
+                className="od-bank-card__balance"
+                style={{ color: "#ff4d4f" }}
+              >
                 {formatVnd(ORG.balance)}
               </div>
             </div>
@@ -315,10 +326,7 @@ export default function OrganizationDetail() {
                 <img src={ORG.qr} alt="QR" className="od-qr-card__img" />
               ) : (
                 <div className="od-qr-card__placeholder">
-                  <img
-                    className="od-qr-card__grid"
-                    src={ORG.qr}
-                  ></img>
+                  <img className="od-qr-card__grid" src={ORG.qr}></img>
                   <div className="od-qr-card__label">
                     <span>VIETQR</span>
                     <span>napas247</span>
@@ -332,14 +340,27 @@ export default function OrganizationDetail() {
           <div className="od-stats-card">
             {/* Banner */}
             <div className="od-stats-card__banner">
-              <div className="od-stats-card__banner-icon">🎯</div>
-              <div className="od-stats-card__banner-text">
-                <span className="od-stats-card__banner-label">Đã vận động</span>
-                <span className="od-stats-card__banner-value">
-                  {formatVnd(ORG.totalIncome)}
-                </span>
+              <img
+                src={banner3}
+                alt="banner"
+                className="od-stats-card__banner-img"
+              />
+
+              <FiHeart className="od-banner-float icon-1" />
+              <FiGift className="od-banner-float icon-2" />
+              <FiStar className="od-banner-float icon-3" />
+
+              {/* overlay */}
+              <div className="od-stats-card__banner-overlay">
+                <div className="od-stats-card__banner-content">
+                  <span className="od-stats-card__banner-label">
+                    🎯 Đã vận động
+                  </span>
+                  <span className="od-stats-card__banner-value">
+                    {formatVnd(ORG.totalIncome)}
+                  </span>
+                </div>
               </div>
-              <div className="od-stats-card__banner-deco">❤️</div>
             </div>
 
             {/* Stat items */}

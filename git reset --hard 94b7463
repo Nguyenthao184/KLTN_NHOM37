@@ -1,0 +1,32 @@
+[33m53adf67[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/nguyenthaonhubinh/user-profile[m[33m)[m Merge remote-tracking branch 'origin/main' into feat/nguyenthaonhubinh/user-profile
+[33m94b7463[m[33m ([m[1;31morigin/feat/nguyenthaonhubinh/user-profile[m[33m)[m temp: code user-profile đang sửa
+[33m7fdacac[m[33m ([m[1;31morigin/main[m[33m)[m Merge pull request #13 from Nguyenthao184/ly-chitiet-to-chuc
+[33mcd82f8f[m[33m ([m[1;31morigin/ly-chitiet-to-chuc[m[33m)[m create organization detail
+[33m98bf30a[m Merge pull request #12 from Nguyenthao184/ly-ds-to-chuc
+[33m3859919[m[33m ([m[1;31morigin/ly-ds-to-chuc[m[33m)[m create organization list
+[33m03836ec[m Merge pull request #11 from Nguyenthao184/ThaoNguyen
+[33mb89425c[m[33m ([m[1;31morigin/ThaoNguyen[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: feed posts, AI matching (FastAPI), geocoding, seed bai_dang
+[33m953cbd1[m Merge pull request #10 from Nguyenthao184/ly-chitiet-chien-dich
+[33m9387cd8[m[33m ([m[1;31morigin/ly-chitiet-chien-dich[m[33m)[m create campaign detail
+[33mf5fad21[m Merge pull request #9 from Nguyenthao184/feat/nguyenthaonhubinh/register-login
+[33m16c5394[m[33m ([m[1;31morigin/feat/nguyenthaonhubinh/register-login[m[33m)[m resolve conflict
+[33m9bcc758[m fix register login
+[33m11a76d4[m Merge pull request #8 from Nguyenthao184/ly-ds-chien-dich
+[33m17c381b[m[33m ([m[1;31morigin/ly-ds-chien-dich[m[33m)[m create campaign list
+[33m19b6453[m Merge pull request #7 from Nguyenthao184/ly-chien-dich
+[33m1d66639[m[33m ([m[1;31morigin/ly-chien-dich[m[33m)[m create user/campaign
+[33m8ca1079[m Merge pull request #6 from Nguyenthao184/ly-vang-lai
+[33m1c6679c[m[33m ([m[1;31morigin/ly-vang-lai[m[33m)[m create home + update components
+[33maa35f32[m create components
+[33m0a9e987[m create-react-app
+[33m4504892[m Merge pull request #5 from Nguyenthao184/feat/nguyenthaonhubinh/tai-khoan-gay-quy
+[33m277aee9[m[33m ([m[1;31morigin/feat/nguyenthaonhubinh/tai-khoan-gay-quy[m[33m)[m feat(smartdonate):tai khoan gay quy
+[33mdeb6168[m[33m ([m[1;32mfeat/nguyenthaonhubinh/xac-minh-to-chuc[m[33m)[m Merge pull request #4 from Nguyenthao184/feat/nguyenthaonhubinh/xac-minh-to-chuc
+[33mb868c9b[m[33m ([m[1;31morigin/feat/nguyenthaonhubinh/xac-minh-to-chuc[m[33m)[m feat(smartdonate):xac minh to chuc
+[33mda58774[m Merge pull request #3 from Nguyenthao184/feat/nguyenthaonhubinh/user-profile
+[33mc395160[m Add missing API and RegisterRequest
+[33m7649e58[m Merge pull request #2 from Nguyenthao184/feat/nguyenthaonhubinh/user-profile
+[33m342d3f0[m feat(smartdonate):user profile
+[33m2186105[m[33m ([m[1;32mmain[m[33m)[m Merge pull request #1 from Nguyenthao184/feat/nguyenthaonhubinh/register-login
+[33m7a069aa[m feat(smartdonate): register-login
+[33mdb3705d[m[33m ([m[1;32mThaoNguyen[m[33m)[m add laravel backend

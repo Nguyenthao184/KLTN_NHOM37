@@ -1,25 +1,14 @@
 import { useState } from "react";
-import { Button, Input } from "antd";
+import { useNavigate } from "react-router-dom";
+import { Input } from "antd";
 import {
   FiSearch,
   FiGift,
   FiPackage,
-  FiImage,
-  FiX,
   FiPlus,
 } from "react-icons/fi";
-import { RiRobot2Line } from "react-icons/ri";
 import PostCard from "../../../components/PostCard/index.jsx";
 import "./NewsFeed.scss";
-
-// ── Mock: thông tin người dùng hiện tại ──────────────────────────────
-const CURRENT_USER = {
-  name: "Thao Ly",
-  avatar: "T",
-  color: "#52c41a",
-  location: "Liên Chiểu, Đà Nẵng",
-  myPosts: [{ id: 99, type: "cho", title: "Xe đạp trẻ em", item: "xe đạp" }],
-};
 
 // ── Mock posts ────────────────────────────────────────────────────────
 const MOCK_POSTS = [
@@ -33,7 +22,7 @@ const MOCK_POSTS = [
     desc: "Nhà mình dư một chiếc xe đạp trẻ em, muốn gửi tặng lại cho bé nào cần dùng. Nếu phù hợp thì cứ nhắn mình nha! 😊",
     image: null,
     likes: 13,
-    status: "con",
+    status: "da",
     aiSuggestions: [
       {
         id: 101,
@@ -303,40 +292,10 @@ const COMMUNITY_STATS = [
 
 // ── Main Component ────────────────────────────────────────────────────
 export default function NewsFeed() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState("cho");
   const [search, setSearch] = useState("");
-  const [createText, setCreateText] = useState("");
   const [likedPosts, setLikedPosts] = useState([]);
-  const [aiHint, setAiHint] = useState(null);
-
-  function handleCreateInput(val) {
-    setCreateText(val);
-    if (val.length > 3) {
-      const keywords = ["xe đạp", "quần áo", "tủ lạnh", "sách", "đồ chơi"];
-      const matched = keywords.find(
-        (k) =>
-          k.includes(val.toLowerCase()) ||
-          val.toLowerCase().includes(k.split(" ")[0]),
-      );
-      if (matched) {
-        const needCount = MOCK_POSTS.filter(
-          (p) =>
-            p.type === "nhan" &&
-            p.title.toLowerCase().includes(matched.split(" ")[0]),
-        ).length;
-        const giveCount = MOCK_POSTS.filter(
-          (p) =>
-            p.type === "cho" &&
-            p.title.toLowerCase().includes(matched.split(" ")[0]),
-        ).length;
-        setAiHint({ matched, needCount, giveCount });
-      } else {
-        setAiHint(null);
-      }
-    } else {
-      setAiHint(null);
-    }
-  }
 
   const filteredMain = MOCK_POSTS.filter(
     (p) =>
@@ -381,58 +340,9 @@ export default function NewsFeed() {
                 onChange={(e) => setSearch(e.target.value)}
                 allowClear
               />
-            </div>
-
-            {/* Create bar */}
-            <div className="nf-create-wrap">
-              <div className="nf-create-bar">
-                <div
-                  className="nf-create-bar__avatar"
-                  style={{ background: CURRENT_USER.color }}
-                >
-                  {CURRENT_USER.avatar}
-                </div>
-                <Input
-                  className="nf-create-bar__input"
-                  placeholder="Bạn muốn cho gì nào?"
-                  value={createText}
-                  onChange={(e) => handleCreateInput(e.target.value)}
-                  bordered={false}
-                />
-                <button className="nf-create-bar__img-btn">
-                  <FiImage size={18} />
+              <button className="nf-toolbar__post-btn" onClick={() => navigate("/bang-tin/tao-moi")}>
+                  <FiPlus size={20} /> Đăng
                 </button>
-                <button className="nf-create-bar__post-btn">
-                  <FiPlus size={16} /> Đăng
-                </button>
-              </div>
-              {aiHint && (
-                <div className="nf-create-ai-hint">
-                  <div className="nf-create-ai-hint__icon">
-                    <RiRobot2Line size={14} />
-                  </div>
-                  <div className="nf-create-ai-hint__text">
-                    {aiHint.giveCount > 0 && (
-                      <span>
-                        Có <strong>{aiHint.giveCount} người</strong> đang cho{" "}
-                        <strong>{aiHint.matched}</strong> gần bạn ·{" "}
-                      </span>
-                    )}
-                    {aiHint.needCount > 0 && (
-                      <span>
-                        <strong>{aiHint.needCount} người</strong> đang cần món
-                        này
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    className="nf-create-ai-hint__close"
-                    onClick={() => setAiHint(null)}
-                  >
-                    <FiX size={12} />
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Posts */}
@@ -518,4 +428,3 @@ export default function NewsFeed() {
     </div>
   );
 }
-

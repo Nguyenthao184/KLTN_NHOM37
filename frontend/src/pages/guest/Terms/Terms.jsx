@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { FiChevronRight, FiMenu, FiX, FiArrowUp } from "react-icons/fi";
-import { RiSparklingLine } from "react-icons/ri";
 import Header from "../../../components/Header/index";
 import Footer from "../../../components/Footer/index";
 import "./Terms.scss";

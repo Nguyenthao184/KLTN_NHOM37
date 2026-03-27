@@ -9,6 +9,7 @@ import MainLayout from "../layouts/MainLayout";
 // Pages
 import HomePage from "../pages/guest/Home/Home.jsx";
 import FAQ from "../pages/guest/FAQ/FAQ.jsx";
+import Privacy from "../pages/guest/Privacy/Privacy.jsx";
 import Terms from "../pages/guest/Terms/Terms.jsx";
 import CampaignPage from "../pages/user/Campaign/Campaign.jsx";
 import OrganizationList from "../pages/user/OrganizationList/OrganizationList.jsx";
@@ -41,6 +42,14 @@ const publicRoutes = [
     element: (
       <PublicRoute>
         <Terms />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/ho-tro/chinh-sach",
+    element: (
+      <PublicRoute>
+        <Privacy />
       </PublicRoute>
     ),
   },

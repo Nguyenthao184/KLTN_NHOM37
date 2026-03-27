@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../store/AuthContext";
+import api from "../../services/api";
 import "./Auth.scss";
 
 const EyeIcon = () => (
@@ -16,12 +16,12 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-export default function LoginPage() {
-  const [form, setForm] = useState({ email: "", password: "" });
+export default function RegisterPage() {
+  const [form, setForm] = useState({ ho_ten: "", email: "", password: "", password_confirmation: "" });
   const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -32,18 +32,29 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (form.password !== form.password_confirmation) {
+      setError("Mật khẩu không khớp");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const roles = await login(form.email, form.password);
-
-      if (roles.includes("ADMIN")) {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
+      await api.post("/register", {
+        ho_ten: form.ho_ten,
+        email: form.email,
+        password: form.password,
+      });
+      alert("Đăng ký thành công! Hãy đăng nhập.");
+      navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message || "Sai email hoặc mật khẩu!");
+      const errors = err.response?.data?.errors;
+      if (errors) {
+        setError(Object.values(errors)[0][0]);
+      } else {
+        setError(err.response?.data?.message || "Đăng ký thất bại");
+      }
     } finally {
       setLoading(false);
     }
@@ -58,11 +69,16 @@ export default function LoginPage() {
 
         <div className="auth-right">
           <div className="auth-form">
-            <h2 className="auth-title">Đăng nhập</h2>
+            <h2 className="auth-title">Đăng ký</h2>
 
             {error && <div className="auth-error">{error}</div>}
 
             <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Họ và tên</label>
+                <input type="text" name="ho_ten" placeholder="Nhập họ và tên" value={form.ho_ten} onChange={handleChange} required />
+              </div>
+
               <div className="form-group">
                 <label>Email</label>
                 <input type="email" name="email" placeholder="Nhập địa chỉ email" value={form.email} onChange={handleChange} required />
@@ -78,27 +94,23 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="form-row-between">
-                <label className="checkbox-label">
-                  <input type="checkbox" /> ghi nhớ tôi
-                </label>
-                <Link to="/forgot-password" className="link-green">Quên mật khẩu</Link>
+              <div className="form-group">
+                <label>Xác nhận mật khẩu</label>
+                <div className="input-password">
+                  <input type={showConfirm ? "text" : "password"} name="password_confirmation" placeholder="Nhập lại mật khẩu" value={form.password_confirmation} onChange={handleChange} required />
+                  <button type="button" className="toggle-pass" onClick={() => setShowConfirm(!showConfirm)}>
+                    {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </div>
               </div>
 
-              <button type="submit" className="btn-green" disabled={loading}>
-                {loading ? "Đang xử lý..." : "Đăng Nhập"}
+              <button type="submit" className="btn-green" disabled={loading} style={{ marginTop: 8 }}>
+                {loading ? "Đang xử lý..." : "Đăng ký"}
               </button>
             </form>
 
-            <div className="auth-divider">|</div>
-
-            <button type="button" className="btn-google">
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-              Đăng nhập bằng tài khoản Google
-            </button>
-
             <p className="auth-switch">
-              Bạn chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+              Bạn đã có tài khoản? <Link to="/login">Đăng nhập</Link>
             </p>
           </div>
         </div>

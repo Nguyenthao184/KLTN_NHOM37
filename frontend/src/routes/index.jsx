@@ -8,14 +8,21 @@ import MainLayout from "../layouts/MainLayout";
 
 // Pages
 import HomePage from "../pages/guest/Home/Home.jsx";
+import LoginPage from "../pages/guest/Login.jsx";
+import Register from "../pages/guest/Register.jsx";
+import ForgotPassword from "../pages/guest/ForgotPassword.jsx";
+import VerifyCode from "../pages/guest/VerifyCode.jsx";
+import ResetPassword from "../pages/guest/ResetPassword.jsx";
 import CampaignPage from "../pages/user/Campaign/Campaign.jsx";
 import OrganizationList from "../pages/user/OrganizationList/OrganizationList.jsx";
 import OrganizationDetail from "../pages/user/OrganizationDetail/OrganizationDetail.jsx";
 import CampaignList from "../pages/guest/CampaignList/CampaignList.jsx";
 import CampaignDetail from "../pages/guest/CampaignDetail/CampaignDetail.jsx";
-import CreateCampaign  from "../pages/organization/CreateCampaign/CreateCampaign.jsx";
-import NewsFeed  from "../pages/user/NewsFeed/NewsFeed.jsx";
-import CreatePost  from "../pages/user/CreatePost/CreatePost.jsx";
+import CreateCampaign from "../pages/organization/CreateCampaign/CreateCampaign.jsx";
+import NewsFeed from "../pages/user/NewsFeed/NewsFeed.jsx";
+import CreatePost from "../pages/user/CreatePost/CreatePost.jsx";
+import ProfilePage from "../pages/user/Profile/Profile.jsx";
+
 // ================== PUBLIC ROUTES ==================
 const publicRoutes = [
   {
@@ -23,6 +30,46 @@ const publicRoutes = [
     element: (
       <PublicRoute>
         <HomePage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/login",
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/register",
+    element: (
+      <PublicRoute>
+        <Register />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <PublicRoute>
+        <ForgotPassword />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/verify-code",
+    element: (
+      <PublicRoute>
+        <VerifyCode />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <PublicRoute>
+        <ResetPassword />
       </PublicRoute>
     ),
   },
@@ -50,6 +97,16 @@ const publicRoutes = [
 
 // ================== PRIVATE ROUTES ==================
 const privateRoutes = [
+  {
+  path: "/profile",
+  element: (
+    <ProtectedRoute>
+      <MainLayout>
+        <ProfilePage />
+      </MainLayout>
+    </ProtectedRoute>
+  ),
+},
   {
     path: "/chien-dich",
     element: (
@@ -126,9 +183,7 @@ export default function AppRoutes() {
           <Route key={index} path={route.path} element={route.element} />
         ))}
 
-        {/* <Route path="/403" element={<UnauthorizedPage />} />
-
-        <Route path="*" element={<Navigate to="/" />} /> */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

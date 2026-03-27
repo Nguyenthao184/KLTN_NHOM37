@@ -126,6 +126,7 @@ export default function Header({ notificationsCount = 2, messagesCount = 3 }) {
                   <FiMessageCircle size={22} />
                 </Badge>
               </button>
+              <Link to="/profile" style={{ textDecoration: "none", color: "inherit" }}>
               <div className="app-header__user">
                 <Avatar size={34} src={user?.avatarUrl}>
                   {user?.name?.[0]?.toUpperCase?.() ?? "U"}
@@ -135,6 +136,7 @@ export default function Header({ notificationsCount = 2, messagesCount = 3 }) {
                   <div className="app-header__userRole">{user?.role}</div>
                 </div>
               </div>
+              </Link>
             </>
           ) : (
             <div className="app-header__auth">

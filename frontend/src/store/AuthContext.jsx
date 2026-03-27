@@ -1,32 +1,67 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import api from "../services/api";
 
 const AuthContext = createContext(null);
 
-const MOCK_USER = {
-  id: 1,
-  name: "Thao Ly",
-  email: "thaoly@gmail.com",
-  avatar: null,
-  role: "user",
-};
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(MOCK_USER);
-  const [token, setToken] = useState("mock-token-123");
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [roles, setRoles] = useState(() => {
+    const saved = localStorage.getItem("roles");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common["Authorization"];
+    }
+  }, [token]);
 
   const login = async (email, password) => {
-    // Sau thay bằng API thật
-    setUser(MOCK_USER);
-    setToken("mock-token-123");
+    const res = await api.post("/login", { email, password });
+    const { token: newToken, user: apiUser, roles: newRoles } = res.data;
+
+    const newUser = {
+      id: apiUser.id,
+      name: apiUser.ho_ten,
+      email: apiUser.email,
+      avatar: apiUser.anh_dai_dien,
+      role: newRoles[0] || "user",
+      ho_ten: apiUser.ho_ten,
+      ten_tai_khoan: apiUser.ten_tai_khoan,
+    };
+
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    localStorage.setItem("roles", JSON.stringify(newRoles));
+
+    setToken(newToken);
+    setUser(newUser);
+    setRoles(newRoles);
+
+    return newRoles;
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post("/logout");
+    } catch (e) {}
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("roles");
     setToken(null);
+    setUser(null);
+    setRoles([]);
+    window.location.href = "/login";
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoggedIn: !!user }}>
+    <AuthContext.Provider value={{ user, token, roles, login, logout, isLoggedIn: !!token }}>
       {children}
     </AuthContext.Provider>
   );

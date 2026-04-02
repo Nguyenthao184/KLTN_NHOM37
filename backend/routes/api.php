@@ -21,7 +21,9 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 // Feed - guest có thể xem danh sách/chi tiết
 Route::get('/posts', [PostController::class, 'index']);
 Route::get('/posts/{id}', [PostController::class, 'show']);
-    
+
+// ds danh mục
+Route::get('/categories', [CampaignController::class, 'getDanhMuc']);
 Route::middleware('auth:sanctum')->group(function(){
     Route::post('/logout',[AuthController::class,'logout']);
 

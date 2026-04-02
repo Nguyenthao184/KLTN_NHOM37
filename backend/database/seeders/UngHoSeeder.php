@@ -23,29 +23,56 @@ class UngHoSeeder extends Seeder
                 continue;
             }
 
-            // scale số lượt theo mục tiêu
-            $soLuot = match (true) {
-                $campaign->muc_tieu_tien < 50_000_000 => rand(20, 80),
-                $campaign->muc_tieu_tien < 200_000_000 => rand(80, 200),
-                default => rand(200, 500),
-            };
+            switch ($campaign->trang_thai) {
+                case 'HOAN_THANH':
+                    $targetPercent = rand(100, 130);
+                    break;
+                case 'DA_KET_THUC':
+                    $targetPercent = rand(40, 90);
+                    break;
+                case 'TAM_DUNG':
+                    $targetPercent = rand(20, 70);
+                    break;
+                default:
+                    $targetPercent = rand(30, 80);
+                    break;
+            }
+
+            $tongTienTarget = ($campaign->muc_tieu_tien * $targetPercent) / 100;
 
             // top donor (rất quan trọng)
             $topUsers = $users->random(min(5, $users->count()));
 
-            for ($i = 0; $i < $soLuot; $i++) {
+            $tong = 0;
+            for ($i = 0; $i < 500; $i++) {
 
                 // 30% là top donor
                 $user = rand(0, 100) < 30
                     ? $topUsers->random()
                     : $users->random();
 
-                // tiền donate
+                $rand = rand(1, 100);
+
                 if ($topUsers->contains('id', $user->id)) {
-                    $soTien = rand(200, 2000) * 1000;
+                    // top donor
+                    $soTien = rand(200, 1000) * 1000;
                 } else {
-                    $soTien = rand(20, 500) * 1000;
+                    if ($rand <= 60) {
+                        $soTien = rand(10, 500) * 1000;   // đa số donate nhỏ
+                    } elseif ($rand <= 90) {
+                        $soTien = rand(500, 5000) * 1000;  // trung bình
+                    } elseif ($rand <= 98) {
+                        $soTien = rand(5000, 10000) * 1000; // hiếm
+                    } else{
+                        $soTien = rand(10000, 50000) * 1000; // rất hiếm
+                    }
                 }
+
+                if ($tong + $soTien > $tongTienTarget) {
+                    $soTien = max(10000, $tongTienTarget - $tong);
+                }
+
+                $tong += $soTien;
 
                 // thời gian giống thật
                 $dayOffset = rand(0, 30);
@@ -67,6 +94,9 @@ class UngHoSeeder extends Seeder
                     'created_at' => $createdAt,
                     'updated_at' => now(),
                 ]);
+
+                $tong += $soTien;
+                if ($tong >= $tongTienTarget) break;
             }
         }
     }

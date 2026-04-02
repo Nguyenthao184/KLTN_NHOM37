@@ -18,8 +18,8 @@ def get_osrm_distance_km(
     call_count: List[int],
 ) -> Optional[float]:
     """
-    Fetch route distance from OSRM (road distance in km).
-    Returns None if OSRM call fails.
+    Lấy khoảng cách đường đi từ OSRM (km theo đường bộ).
+    Trả về None nếu gọi OSRM thất bại.
     """
     key = (round(lat1, 6), round(lon1, 6), round(lat2, 6), round(lon2, 6))
     if key in cache:
@@ -45,8 +45,8 @@ def get_osrm_distance_km(
 @lru_cache(maxsize=max(16, config.OSRM_GLOBAL_CACHE_SIZE))
 def _osrm_distance_km_cached(lat1: float, lon1: float, lat2: float, lon2: float) -> Optional[float]:
     """
-    Global cache across requests (process-level).
-    Any exception returns None (no retry).
+    Bộ nhớ đệm toàn cục giữa các request (theo tiến trình).
+    Mọi ngoại lệ trả về None (không thử lại).
     """
     if not config.OSRM_ENABLED:
         return None

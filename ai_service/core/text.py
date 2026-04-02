@@ -12,11 +12,11 @@ from core.similarity import semantic_similarity_single_target
 
 def normalize_semantic_text(text: str) -> str:
     """
-    Normalize text for semantic/rule matching:
-    - lowercase
-    - strip accents
-    - keep only word chars/spaces
-    - collapse whitespace
+    Chuẩn hóa văn bản cho ghép ngữ nghĩa / luật:
+    - chữ thường
+    - bỏ dấu
+    - chỉ giữ ký tự từ và khoảng trắng
+    - gộp khoảng trắng
     """
     value = (text or "").strip().lower()
     value = unicodedata.normalize("NFKD", value)
@@ -36,7 +36,7 @@ def semantic_level(score: float) -> Literal["HIGH", "MEDIUM", "LOW"]:
 
 def has_multi_intent_overlap(target_text: str, cand_text: str) -> bool:
     """
-    Rule-based intent bridge for common donation scenarios.
+    Cầu ý định theo luật cho các tình huống quyên góp thường gặp.
     """
     rules: List[Tuple[Set[str], Set[str]]] = [
         ({"quan ao", "quan", "ao", "do mac"}, {"ao", "quan", "mac", "chan", "am"}),
@@ -86,7 +86,7 @@ def must_reject_by_rules(
     target_category: Optional[str],
     cand_category: Optional[str],
 ) -> bool:
-    # Reject bắt buộc: không có tín hiệu text + semantic quá thấp.
+    # Loại bắt buộc: không có tín hiệu chữ + điểm ngữ nghĩa quá thấp.
     if not cand_text:
         return True
 
@@ -96,7 +96,7 @@ def must_reject_by_rules(
     if match_sim < core_config.REJECT_LOW_SIM_THRESHOLD and overlap == 0:
         return True
 
-    # Reject bắt buộc: category lệch mạnh và semantic không đủ cao.
+    # Loại bắt buộc: danh mục lệch mạnh và điểm ngữ nghĩa không đủ cao.
     if (
         target_category is not None
         and cand_category is not None
@@ -144,8 +144,8 @@ def _contains_any(text: str, keywords: List[str]) -> bool:
 
 def is_cross_domain_hard_reject(target_text: str, cand_text: str) -> bool:
     """
-    Hard reject obvious cross-domain pairs.
-    If target asks education items but candidate is vehicle-only (or inverse), reject.
+    Loại cứng các cặp lệch miền rõ ràng.
+    Nếu bài đích cần đồ học tập mà ứng viên chỉ có xe (hoặc ngược lại) thì loại.
     """
     edu_keywords = ["hoc tap", "sach", "vo", "but", "hoc phi", "laptop", "may tinh"]
     vehicle_keywords = ["xe may", "xe dap", "xe lan", "phuong tien"]
@@ -165,8 +165,8 @@ def is_cross_domain_hard_reject(target_text: str, cand_text: str) -> bool:
 def extract_intents(text: str) -> Set[str]:
     intents: Set[str] = set()
 
-    # Context mapping for emergency scenarios:
-    # "cháy nhà / mất nhà" typically implies household items + some clothes + some food.
+    # Ánh xạ ngữ cảnh khi khẩn cấp:
+    # "cháy nhà / mất nhà" thường ngụ ý đồ gia dụng + quần áo + thực phẩm.
     if any(k in text for k in ["chay nha", "mat nha", "mat het", "khong con nha", "hoa hoan"]):
         intents.update({"household", "clothes", "food"})
 
@@ -199,8 +199,8 @@ def extract_intents(text: str) -> Set[str]:
 
 def should_reject_by_intent(target_text: str, cand_text: str) -> bool:
     """
-    If target has clear intent(s), candidate must overlap at least one intent.
-    Otherwise reject to avoid semantic noise (e.g., education -> rice/cookware/clothes).
+    Nếu bài đích có ý định rõ, ứng viên phải trùng ít nhất một ý định.
+    Ngược lại loại để tránh nhiễu ngữ nghĩa (vd: học tập → gạo/nồi/quần áo).
     """
     target_intents = extract_intents(target_text)
     if not target_intents:
@@ -216,10 +216,10 @@ def is_food_urgency_target(target_text: str) -> bool:
 
 def should_reject_for_food_urgency(target_text: str, cand_text: str) -> bool:
     """
-    Tight mode for urgent food requests:
-    - keep food
-    - allow household as secondary support
-    - reject others (clothes/vehicle/education/medical)
+    Chế độ chặt cho yêu cầu thực phẩm khẩn:
+    - giữ thực phẩm
+    - cho phép gia dụng như hỗ trợ phụ
+    - loại các loại khác (quần áo/xe/học tập/y tế)
     """
     if not is_food_urgency_target(target_text):
         return False
@@ -273,8 +273,8 @@ def should_reject_vehicle_offer_when_vehicle_not_allowed(
 
 def should_reject_for_vehicle_target(target_text: str, cand_text: str) -> bool:
     """
-    Strict gate for vehicle demand:
-    when target clearly asks for vehicle/transport, only keep vehicle candidates.
+    Cổng chặt khi bài đích cần phương tiện:
+    khi rõ ràng xin xe/vận chuyển thì chỉ giữ ứng viên có ý định vehicle.
     """
     target_intents = extract_intents(target_text)
     if "vehicle" not in target_intents:

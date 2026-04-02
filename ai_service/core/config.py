@@ -7,7 +7,7 @@ def _env_bool(name: str, default: str = "0") -> bool:
 
 
 # ---------------------------
-# Similarity thresholds
+# Ngưỡng tương đồng
 # ---------------------------
 SEMANTIC_MODEL_NAME = os.getenv(
     "SEMANTIC_MODEL_NAME",
@@ -29,7 +29,7 @@ MATCH_RELEVANCE_FLOOR_GATED = float(os.getenv("MATCH_RELEVANCE_FLOOR_GATED", "0.
 CATEGORY_MISMATCH_REJECT_SIM = float(os.getenv("CATEGORY_MISMATCH_REJECT_SIM", "0.65"))
 
 # ---------------------------
-# Category labels + prototypes
+# Nhãn danh mục + mẫu gốc
 # ---------------------------
 CATEGORY_LABELS: List[str] = ["food", "vehicle", "clothes", "education"]
 CATEGORY_PROTOTYPES: Dict[str, List[str]] = {
@@ -56,7 +56,7 @@ CATEGORY_PROTOTYPES: Dict[str, List[str]] = {
 }
 
 # ---------------------------
-# OSRM (optional road distance)
+# OSRM (khoảng cách đường bộ, tùy chọn)
 # ---------------------------
 OSRM_BASE_URL = os.getenv("OSRM_BASE_URL", "https://router.project-osrm.org").rstrip("/")
 OSRM_PROFILE = os.getenv("OSRM_PROFILE", "driving").strip() or "driving"
@@ -67,8 +67,6 @@ OSRM_ENRICH_IN_MATCHES = _env_bool("OSRM_ENRICH_IN_MATCHES", "0")
 OSRM_ENRICH_TOP_N = int(os.getenv("OSRM_ENRICH_TOP_N", "5"))
 OSRM_GLOBAL_CACHE_SIZE = int(os.getenv("OSRM_GLOBAL_CACHE_SIZE", "5000"))
 
-# ---------------------------
-# Debug / diagnostics
-# ---------------------------
+# Gỡ lỗi / chẩn đoán
 DEBUG_SEMANTIC_MATCH = _env_bool("DEBUG_SEMANTIC_MATCH", "0")
 

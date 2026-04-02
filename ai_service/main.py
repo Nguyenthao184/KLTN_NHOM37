@@ -14,7 +14,7 @@ from core import similarity as core_similarity
 from core import text as core_text
 
 
-app = FastAPI(title="SmartDonate AI Matching Service")
+app = FastAPI(title="Dịch vụ ghép nối AI SmartDonate")
 
 
 class AiPost(BaseModel):
@@ -229,7 +229,7 @@ def matches(req: MatchRequest) -> List[MatchResponseItem]:
     strict_rows = [row for row in scored_rows if row[1] >= core_config.MIN_SIM_STRICT]
 
     multi_need = len(allowed_categories) > 1
-    # education: bài "cần laptop" vs "tặng sách/vở" thường điểm blend ở vùng loose, không chỉ laptop khớp chặt
+    # Giáo dục: bài "cần laptop" và "tặng sách/vở" thường có điểm trộn ở mức lỏng, không chỉ khớp laptop chặt
     intent_loose = bool(
         {"food", "clothes", "household", "education"} & target_intents
     )
@@ -311,9 +311,9 @@ def semantic_matches(req: SemanticMatchRequest) -> List[SemanticMatchResponseIte
 @app.post("/fraud-check", response_model=List[FraudCheckItem])
 def fraud_check(req: FraudCheckRequest) -> List[FraudCheckItem]:
     """
-    Fraud detection bang IsolationForest voi 5 dac trung hanh vi.
-    - predict = -1 -> abnormal -> HIGH
-    - predict = 1  -> normal   -> LOW
+    Phát hiện gian lận bằng IsolationForest với 5 đặc trưng hành vi.
+    - predict = -1 → bất thường → HIGH
+    - predict = 1  → bình thường → LOW
     """
     ds_users = req.users
 
@@ -356,9 +356,9 @@ def fraud_check(req: FraudCheckRequest) -> List[FraudCheckItem]:
 @app.post("/campaign-fraud-check", response_model=List[CampaignFraudCheckItem])
 def campaign_fraud_check(req: CampaignFraudCheckRequest) -> List[CampaignFraudCheckItem]:
     """
-    Fraud detection cho campaign gay quy bang IsolationForest.
-    - predict = -1 -> abnormal -> HIGH
-    - predict = 1  -> normal   -> LOW
+    Phát hiện gian lận chiến dịch gây quỹ bằng IsolationForest.
+    - predict = -1 → bất thường → HIGH
+    - predict = 1  → bình thường → LOW
     """
     ds_campaign = req.campaigns
 

@@ -5,7 +5,7 @@ import numpy as np
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
-    Tinh khoang cach haversine (km) giua 2 toa do.
+    Tính khoảng cách haversine (km) giữa hai tọa độ.
     """
     ban_kinh_trai_dat_km = 6371.0
 
@@ -24,7 +24,7 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 def score_location_km(distance_km: float) -> float:
-    # smooth decay: 3 * exp(-d/5)
+    # Giảm mượt theo khoảng cách: 3 * exp(-d/5)
     return float(3.0 * np.exp(-max(0.0, distance_km) / 5.0))
 
 

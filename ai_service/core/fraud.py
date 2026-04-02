@@ -5,7 +5,7 @@ from typing import List, Any
 
 def build_fraud_features(user: Any) -> List[float]:
     """
-    Chuyen doi du lieu user thanh vector 5 dac trung:
+    Chuyển dữ liệu user thành vector 5 đặc trưng:
     [
         posts_per_day,
         content_similarity,
@@ -25,7 +25,7 @@ def build_fraud_features(user: Any) -> List[float]:
 
 def build_campaign_fraud_features(campaign: Any) -> List[float]:
     """
-    Chuyen doi du lieu campaign thanh vector 5 dac trung:
+    Chuyển dữ liệu campaign thành vector 5 đặc trưng:
     [
         campaigns_per_user,
         donation_growth,

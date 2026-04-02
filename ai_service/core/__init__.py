@@ -1,6 +1,6 @@
 """
-Core logic modules for the AI service.
+Các module logic lõi cho dịch vụ AI.
 
-This package exists to keep `ai_service/main.py` focused on FastAPI wiring.
+Gói này giúp `ai_service/main.py` chỉ tập trung nối FastAPI.
 """
 

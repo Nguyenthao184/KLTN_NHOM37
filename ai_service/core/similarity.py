@@ -18,10 +18,10 @@ except Exception:  # pragma: no cover
 @lru_cache(maxsize=1)
 def get_semantic_model() -> Optional["SentenceTransformer"]:
     """
-    Load semantic model once per process.
-    Supports:
+    Tải mô hình ngữ nghĩa một lần mỗi tiến trình.
+    Hỗ trợ:
     - sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-    - keepitreal/vietnamese-sbert (set via SEMANTIC_MODEL_NAME)
+    - keepitreal/vietnamese-sbert (cấu hình qua SEMANTIC_MODEL_NAME)
     """
     if SentenceTransformer is None:
         return None
@@ -33,7 +33,7 @@ def get_semantic_model() -> Optional["SentenceTransformer"]:
 
 def semantic_similarity_scores(target_text: str, other_texts: List[str]) -> np.ndarray:
     """
-    Return cosine similarity scores between `target_text` and each text in `other_texts`.
+    Trả về điểm tương đồng cosine giữa `target_text` và từng chuỗi trong `other_texts`.
     """
     model = get_semantic_model()
     if model is None:
@@ -56,7 +56,7 @@ def semantic_similarity_scores(target_text: str, other_texts: List[str]) -> np.n
     )
     target_emb = embeddings[0]
     cand_embs = embeddings[1:]
-    # normalize_embeddings=True => cosine ~ dot product
+    # normalize_embeddings=True → cosine xấp xỉ tích vô hướng
     return cand_embs @ target_emb
 
 
@@ -75,8 +75,8 @@ def lexical_similarity_scores(target_text: str, other_texts: List[str]) -> np.nd
 
 def semantic_similarity_single_target(target_text: str, other_texts: List[str]) -> np.ndarray:
     """
-    Semantic-first similarity for generic text matching.
-    Uses model embedding as primary signal and lexical as backup for robustness.
+    Tương đồng ưu tiên ngữ nghĩa cho ghép văn bản chung.
+    Dùng embedding mô hình làm tín hiệu chính, từ vựng làm dự phòng để ổn định.
     """
     semantic_sims = semantic_similarity_scores(target_text, other_texts)
     lexical_sims = lexical_similarity_scores(target_text, other_texts)

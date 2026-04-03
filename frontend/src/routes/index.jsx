@@ -8,6 +8,7 @@ import MainLayout from "../layouts/MainLayout";
 
 // Pages
 import HomePage from "../pages/guest/Home/Home.jsx";
+import Search from "../pages/guest/Search/Search.jsx";
 import FAQ from "../pages/guest/FAQ/FAQ.jsx";
 import Privacy from "../pages/guest/Privacy/Privacy.jsx";
 import Terms from "../pages/guest/Terms/Terms.jsx";
@@ -19,6 +20,7 @@ import CampaignDetail from "../pages/guest/CampaignDetail/CampaignDetail.jsx";
 import CreateCampaign  from "../pages/organization/CreateCampaign/CreateCampaign.jsx";
 import NewsFeed  from "../pages/user/NewsFeed/NewsFeed.jsx";
 import CreatePost  from "../pages/user/CreatePost/CreatePost.jsx";
+import AdminPanel from "../pages/admin/AdminPanel/AdminPanel.jsx";
 // ================== PUBLIC ROUTES ==================
 const publicRoutes = [
   {
@@ -26,6 +28,14 @@ const publicRoutes = [
     element: (
       <PublicRoute>
         <HomePage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/tim-kiem",
+    element: (
+      <PublicRoute>
+        <Search />
       </PublicRoute>
     ),
   },
@@ -134,6 +144,14 @@ const privateRoutes = [
         <MainLayout>
           <CreatePost />
         </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+          <AdminPanel />
       </ProtectedRoute>
     ),
   },

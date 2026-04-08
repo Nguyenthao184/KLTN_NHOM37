@@ -118,6 +118,7 @@ export default function Header({ notificationsCount = 2 }) {
     {
       key: "profile",
       label: "Thông tin cá nhân",
+      onClick: () => navigate("/profile"),
     },
     {
       key: "logout",

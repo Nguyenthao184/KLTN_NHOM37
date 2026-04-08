@@ -1,0 +1,191 @@
+import { create } from "zustand";
+import {
+  getAdminUsers,
+  lockUser,
+  unlockUser,
+  getAdminPosts,
+  getAdminCampaigns,
+  approveCampaign,
+  rejectCampaign,
+  approveOrganization,
+  rejectOrganization,
+} from "../api/adminService";
+
+let usersPromise = null;
+let postsPromise = null;
+let campaignsPromise = null;
+
+const useAdminStore = create((set, get) => ({
+  // ===== STATE =====
+  users: [],
+  posts: [],
+  campaigns: [],
+
+  loadingUsers: false,
+  loadingPosts: false,
+  loadingCampaigns: false,
+
+  isFetchedUsers: false,
+  isFetchedPosts: false,
+  isFetchedCampaigns: false,
+
+  // ===== USERS =====
+  fetchUsers: async () => {
+    if (get().isFetchedUsers) return;
+    if (usersPromise) return usersPromise;
+
+    set({ loadingUsers: true });
+
+    usersPromise = (async () => {
+      try {
+        const res = await getAdminUsers();
+        set({
+          users: res.data || [],
+          loadingUsers: false,
+          isFetchedUsers: true,
+        });
+      } catch (err) {
+        console.error("Lỗi fetch users:", err);
+        set({ loadingUsers: false });
+      } finally {
+        usersPromise = null;
+      }
+    })();
+
+    return usersPromise;
+  },
+
+  handleLockUser: async (id) => {
+    try {
+      await lockUser(id);
+      set({
+        users: get().users.map((u) =>
+          u.id === id ? { ...u, status: "BI_CAM", status_label: "Đã khóa" } : u
+        ),
+      });
+      return true;
+    } catch (err) {
+      console.error("Lỗi khóa user:", err);
+      return false;
+    }
+  },
+
+  handleUnlockUser: async (id) => {
+    try {
+      await unlockUser(id);
+      set({
+        users: get().users.map((u) =>
+          u.id === id ? { ...u, status: "HOAT_DONG", status_label: "Hoạt động" } : u
+        ),
+      });
+      return true;
+    } catch (err) {
+      console.error("Lỗi mở khóa user:", err);
+      return false;
+    }
+  },
+
+  // ===== POSTS =====
+  fetchPosts: async () => {
+    if (get().isFetchedPosts) return;
+    if (postsPromise) return postsPromise;
+
+    set({ loadingPosts: true });
+
+    postsPromise = (async () => {
+      try {
+        const res = await getAdminPosts();
+        set({
+          posts: res.data?.data || res.data || [],
+          loadingPosts: false,
+          isFetchedPosts: true,
+        });
+      } catch (err) {
+        console.error("Lỗi fetch posts:", err);
+        set({ loadingPosts: false });
+      } finally {
+        postsPromise = null;
+      }
+    })();
+
+    return postsPromise;
+  },
+
+  // ===== CAMPAIGNS =====
+  fetchCampaigns: async () => {
+    if (get().isFetchedCampaigns) return;
+    if (campaignsPromise) return campaignsPromise;
+
+    set({ loadingCampaigns: true });
+
+    campaignsPromise = (async () => {
+      try {
+        const res = await getAdminCampaigns();
+        set({
+          campaigns: res.data || [],
+          loadingCampaigns: false,
+          isFetchedCampaigns: true,
+        });
+      } catch (err) {
+        console.error("Lỗi fetch campaigns:", err);
+        set({ loadingCampaigns: false });
+      } finally {
+        campaignsPromise = null;
+      }
+    })();
+
+    return campaignsPromise;
+  },
+
+  handleApproveCampaign: async (id) => {
+    try {
+      await approveCampaign(id);
+      set({
+        campaigns: get().campaigns.map((c) =>
+          c.id === id ? { ...c, trang_thai: "HOAT_DONG" } : c
+        ),
+      });
+      return true;
+    } catch (err) {
+      console.error("Lỗi duyệt campaign:", err);
+      return false;
+    }
+  },
+
+  handleRejectCampaign: async (id) => {
+    try {
+      await rejectCampaign(id);
+      set({
+        campaigns: get().campaigns.map((c) =>
+          c.id === id ? { ...c, trang_thai: "TU_CHOI" } : c
+        ),
+      });
+      return true;
+    } catch (err) {
+      console.error("Lỗi từ chối campaign:", err);
+      return false;
+    }
+  },
+
+  handleApproveOrg: async (id) => {
+    try {
+      await approveOrganization(id);
+      return true;
+    } catch (err) {
+      console.error("Lỗi duyệt tổ chức:", err);
+      return false;
+    }
+  },
+
+  handleRejectOrg: async (id) => {
+    try {
+      await rejectOrganization(id);
+      return true;
+    } catch (err) {
+      console.error("Lỗi từ chối tổ chức:", err);
+      return false;
+    }
+  },
+}));
+
+export default useAdminStore;

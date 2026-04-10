@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Progress, Carousel } from "antd";
 import {
   FiChevronRight,
@@ -38,8 +38,12 @@ export default function Campaign() {
   const carouselRef = useRef(null);
   const orgCarouselRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const { featured, loading: campLoading } = useCampaigns({ featured: true });
+  const {
+    featured,
+    loading: campLoading
+  } = useCampaigns({ featured: true });
   const { categories } = useCategories();
   const { organizations } = useOrganizations();
   const endingCampaigns = useCampaignStore((s) => s.endingCampaigns);
@@ -53,6 +57,15 @@ export default function Campaign() {
   const fetchOrganizationStatus = useOrganizationStore(
     (s) => s.fetchOrganizationStatus,
   );
+
+  const refreshCampaignData = useCampaignStore((s) => s.refreshCampaignData);
+
+  useEffect(() => {
+    if (location.state?.refresh) {
+      refreshCampaignData(); // ← thay fetchFeatured() + fetchEndingCampaigns()
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchEndingCampaigns();

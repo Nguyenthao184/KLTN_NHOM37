@@ -42,7 +42,8 @@ export default function useCampaigns({ params = null, featured = false } = {}) {
     featured: featuredList,
     loading,
     loadingCreate, 
-    fetchCampaigns, // expose để component tự gọi khi đổi page
+    fetchCampaigns, 
+    fetchFeatured,
     createCampaign, 
   };
 }

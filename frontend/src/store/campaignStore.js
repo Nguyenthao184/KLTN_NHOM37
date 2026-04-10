@@ -107,7 +107,7 @@ const useCampaignStore = create((set, get) => ({
     return endingPromise;
   },
 
-   createCampaign: async (formData) => {
+  createCampaign: async (formData) => {
     if (get().loadingCreate) return;
     set({ loadingCreate: true });
     try {
@@ -123,6 +123,23 @@ const useCampaignStore = create((set, get) => ({
       set({ loadingCreate: false });
       throw err; // ném lên để FE bắt và hiện notification
     }
+  },
+
+  refreshCampaignData: async () => {
+    set({
+      isFetchedFeatured: false,
+      endingCampaigns: [],
+    });
+
+    const { fetchFeatured, fetchEndingCampaigns } = get();
+    await Promise.all([fetchFeatured(), fetchEndingCampaigns()]);
+  },
+
+  invalidateCampaignDetail: (id) => {
+    const sid = String(id);
+    const current = get().campaignDetail;
+    const { [sid]: _, ...rest } = current;
+    set({ campaignDetail: rest });
   },
 }));
 

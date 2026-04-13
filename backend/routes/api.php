@@ -15,6 +15,8 @@ use App\Http\Controllers\FraudController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\TroChuyenController;
+use App\Http\Controllers\PostCommentController;
+use App\Http\Controllers\PostReportController;
 
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
@@ -24,6 +26,7 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 // Feed - guest có thể xem danh sách/chi tiết
 Route::get('/posts', [PostController::class, 'index']);
 Route::get('/posts/{id}', [PostController::class, 'show'])->whereNumber('id');
+Route::get('/posts/{id}/comments', [PostCommentController::class, 'index'])->whereNumber('id');
 
 // ds danh mục
 Route::get('/categories', [CampaignController::class, 'getDanhMuc']);
@@ -31,6 +34,11 @@ Route::get('/categories', [CampaignController::class, 'getDanhMuc']);
 Route::middleware('auth:sanctum')->group(function(){
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout',[AuthController::class,'logout']);
+
+    Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->whereNumber('id');
+    Route::post('/posts/{id}/comments', [PostCommentController::class, 'store'])->whereNumber('id');
+    Route::post('/comments/{id}', [PostCommentController::class, 'destroy'])->whereNumber('id');
+    Route::post('/posts/{id}/report', [PostReportController::class, 'store'])->whereNumber('id');
 
     Route::middleware('role:ADMIN')->group(function(){
         Route::prefix('/admin')->group(function () {
@@ -46,7 +54,7 @@ Route::middleware('auth:sanctum')->group(function(){
             Route::get('/dashboard/featured-campaigns', [AdminDashboardController::class, 'featuredCampaigns']);
 
             // ADMIN - danh sach / chi tiet
-            Route::get('/organizations', [OrganizationController::class, 'index']);
+            Route::get('/organizations', [OrganizationController::class, 'adminIndex']);
             Route::get('/organizations/{id}', [OrganizationController::class, 'show']);
             Route::get('/campaigns', [CampaignController::class, 'index']);
             Route::get('/campaigns/{id}', [CampaignController::class, 'show']);
@@ -70,6 +78,9 @@ Route::middleware('auth:sanctum')->group(function(){
             Route::post('/fraud-check/campaigns/auto', [FraudController::class, 'autoCheckCampaigns']);
             Route::get('/fraud-alerts', [FraudController::class, 'getAlerts']);
             Route::post('/fraud-alerts/{canhBao}', [FraudController::class, 'updateAlert']);
+
+            Route::get('/post-reports', [PostReportController::class, 'adminIndex']);
+            Route::post('/post-reports/{id}', [PostReportController::class, 'adminUpdate'])->whereNumber('id');
         });
 
        
@@ -117,6 +128,10 @@ Route::middleware('auth:sanctum')->group(function(){
             Route::get('/', [TroChuyenController::class, 'danhSach']);
             Route::get('/{id}/tin-nhan', [TroChuyenController::class, 'layTinNhan']);
             Route::post('/{id}/tin-nhan', [TroChuyenController::class, 'guiTinNhan']);
+            Route::delete('/{id}/tin-nhan', [TroChuyenController::class, 'xoaHetTinNhan'])->whereNumber('id');
+            Route::post('/{id}/tin-nhan/{tinNhanId}', [TroChuyenController::class, 'xoaTinNhan'])
+                ->whereNumber('id')
+                ->whereNumber('tinNhanId');
             Route::post('/{id}/da-xem', [TroChuyenController::class, 'danhDauDaXem']);
         });
        

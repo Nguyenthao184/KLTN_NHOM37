@@ -1,18 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Form, Input, Button, Checkbox, notification } from "antd";
 import {
   UserOutlined,
   MailOutlined,
   LockOutlined,
   SafetyOutlined,
+  KeyOutlined
 } from "@ant-design/icons";
 import { registerAPI } from "../../../api/authService";
 import logo from "../../../assets/logo.png";
 import "./Register.scss";
 
 export default function Register() {
-  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -20,23 +19,20 @@ export default function Register() {
     try {
       setLoading(true);
 
-      const res = await registerAPI({
+      await registerAPI({
         ho_ten: values.ho_ten,
         email: values.e_m,
         password: values.m_k,
         password_confirmation: values.x_n,
       });
 
-      notification.success({
-        message: "Đăng ký thành công!",
-        description: res.message || "Vui lòng kiểm tra email để xác minh tài khoản",
-        duration: 5,
+      notification.info({
+        message: "Kiểm tra email",
+        description:
+          "Vui lòng xác minh tài khoản qua email trước khi đăng nhập",
       });
 
-      // delay lâu hơn để user đọc thông báo
-      setTimeout(() => {
-        navigate("/dang-nhap");
-      }, 3000);
+      form.resetFields();
     } catch (err) {
       notification.error({
         message: "Đăng ký thất bại!",
@@ -146,6 +142,39 @@ export default function Register() {
                   size="large"
                   autoComplete="new-mk"
                 />
+              </Form.Item>
+
+              <Form.Item label="Mã xác nhận" required>
+                <Input.Group compact style={{ display: "flex" }}>
+                  <Form.Item
+                    name="x_code"
+                    noStyle
+                    rules={[
+                      { required: true, message: "Vui lòng nhập mã xác nhận!" },
+                    ]}
+                  >
+                    <Input
+                      prefix={<KeyOutlined />}
+                      placeholder="Nhập mã từ email"
+                      size="large"
+                      style={{ flex: 3 }}
+                      maxLength={8}
+                    />
+                  </Form.Item>
+                  <Button
+                    size="large"
+                    style={{ flex: 1 }}
+                    className="send-code-btn-outline"
+                    onClick={() =>
+                      notification.info({
+                        message: "Kiểm tra email",
+                        description: "Vui lòng qua email để lấy mã xác nhận",
+                      })
+                    }
+                  >
+                    Gửi mã
+                  </Button>
+                </Input.Group>
               </Form.Item>
 
               <Form.Item

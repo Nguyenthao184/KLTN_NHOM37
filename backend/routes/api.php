@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DonateController;
@@ -18,12 +19,13 @@ use App\Http\Controllers\PostCommentController;
 use App\Http\Controllers\PostReportController;
 
 Route::post('/register', [AuthController::class,'register']);
-Route::get('/verify-register', [AuthController::class, 'verifyRegister']);
+Route::post('/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/login', [AuthController::class,'login']);
 Route::get('/auth/google', [GoogleController::class, 'redirect']);
 Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::get('/map/campaigns', [CampaignController::class, 'map']);
 
 // Feed - guest có thể xem danh sách/chi tiết
 Route::get('/posts', [PostController::class, 'index']);
@@ -39,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::post('/broadcasting/auth', function (Request $request) {
         return Broadcast::auth($request);
     });
-
+    Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->whereNumber('id');
     Route::post('/posts/{id}/comments', [PostCommentController::class, 'store'])->whereNumber('id');
     Route::post('/comments/{id}', [PostCommentController::class, 'destroy'])->whereNumber('id');
@@ -102,8 +104,9 @@ Route::middleware('auth:sanctum')->group(function(){
 
         //ủng hộ
         Route::post('/donate', [DonateController::class, 'donate']);
-        Route::post('/donate/confirm', [DonateController::class, 'confirmDonate']);
+        Route::get('/donate/{id}', [DonateController::class, 'getDonateDetail']);
         Route::get('/donate/history', [DonateController::class, 'donateHistory']);
+        Route::post('/momo/success', [DonateController::class, 'momoSuccess']);
     });
     
     Route::middleware(['role:TO_CHUC','update.campaign'])->group(function(){
@@ -122,6 +125,7 @@ Route::middleware('auth:sanctum')->group(function(){
 
         // AI matching
         Route::get('/posts/{id}/matches', [PostController::class, 'matches'])->whereNumber('id');
+       
         Route::prefix('/tro-chuyen')->group(function () {
             Route::post('/tao-hoac-lay', [TroChuyenController::class, 'taoHoacLay']);
             Route::get('/', [TroChuyenController::class, 'danhSach']);
@@ -149,4 +153,5 @@ Route::middleware('update.campaign')->group(function () {
     Route::get('/campaigns/ending-soon', [CampaignController::class, 'endingSoon']);
     Route::get('/campaigns/{id}', [CampaignController::class, 'show']);
 });
-Route::get('/vnpay/return', [DonateController::class, 'vnpayReturn']);
+
+Route::post('/momo/ipn', [DonateController::class, 'momoIpn']);

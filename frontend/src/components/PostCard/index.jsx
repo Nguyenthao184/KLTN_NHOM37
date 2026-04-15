@@ -162,16 +162,6 @@ export default function PostCard({ post, style, onDelete }) {
                       <FiEdit2 size={16} />
                       Chỉnh sửa bài đăng
                     </button>
-                    <button
-                      className="post-card__dropdown-item"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <FiCheckSquare size={16} />
-                      Đánh dấu đã xong
-                    </button>
                     <div className="post-card__dropdown-sep" />
                     <button
                       className="post-card__dropdown-item post-card__dropdown-item--danger"

@@ -207,7 +207,6 @@ const privateRoutes = [
       </ProtectedRoute>
     ),
   },
-  
   {
     path: "/chat",
     element: (

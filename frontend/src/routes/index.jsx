@@ -155,6 +155,14 @@ const publicRoutes = [
       </PublicRoute>
     ),
   },
+  {
+    path: "/thanh-cong",
+    element: (
+      <PublicRoute>
+          <DonateSuccess />
+      </PublicRoute>
+    ),
+  },
 ];
 
 // ================== PRIVATE ROUTES ==================
@@ -196,14 +204,6 @@ const privateRoutes = [
         <MainLayout>
           <Donate />
         </MainLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/thanh-cong",
-    element: (
-      <ProtectedRoute>
-          <DonateSuccess />
       </ProtectedRoute>
     ),
   },

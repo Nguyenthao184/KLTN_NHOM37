@@ -257,11 +257,6 @@ export default function PostDetailModal({ post, visible, onClose }) {
         className={`pdc${hasAiSuggestions ? " pdc--ai" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {hasAiSuggestions && (
-          <div className="pdc__ai-top-badge">
-            <RiSparklingLine size={12} /> AI GỢI Ý PHÙ HỢP VỚI BẠN
-          </div>
-        )}
 
         <button className="pdc__close-btn" onClick={onClose}>
           <FiX size={20} />

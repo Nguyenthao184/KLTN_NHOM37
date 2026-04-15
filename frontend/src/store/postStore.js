@@ -16,7 +16,7 @@ const usePostStore = create((set, get) => ({
   posts: [],
   postDetail: {},
   matches: {},
-  loadingMatches: false,
+  loadingMatches: null,
   loading: false,
   hasMore: true,
 
@@ -143,10 +143,16 @@ const usePostStore = create((set, get) => ({
     }
   },
 
-  fetchMatches: async (id) => {
-    if (get().matches[id]) return get().matches[id];
+  fetchMatches: async (id, force = false) => {
+    const key = String(id);
 
-    set({ loadingMatches: true });
+    if (!force && get().matches[key]) {
+      return get().matches[key];
+    }
+
+    if (get().loadingMatches === key) return;
+
+    set({ loadingMatches: key });
 
     try {
       const res = await getPostMatches(id);
@@ -156,15 +162,16 @@ const usePostStore = create((set, get) => ({
       set({
         matches: {
           ...get().matches,
-          [id]: data,
+          [key]: data,
         },
-        loadingMatches: false,
+        loadingMatches: null,
       });
 
       return data;
     } catch (err) {
       console.error("Lỗi fetch matches:", err);
-      set({ loadingMatches: false });
+
+      set({ loadingMatches: null });
       return [];
     }
   },

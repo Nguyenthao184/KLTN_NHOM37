@@ -7,20 +7,36 @@ import { FaPeopleCarry } from "react-icons/fa";
 import { MdFeed } from "react-icons/md";
 import PostCard from "../../../components/PostCard/index.jsx";
 import usePosts from "../../../hooks/usePosts";
+import usePostStore from "../../../store/postStore";
 import useChatStore from "../../../store/chatStore";
 import useAuthStore from "../../../store/authStore";
 import "./NewsFeed.scss";
 
 const COMMUNITY_STATS = [
-  { icon: <BsBagHeartFill size={20} color="#ff4d4f"/>, value: 125, label: "đồ dùng đã được tặng" },
-  { icon: <FaPeopleCarry size={20} color="#fa8c16"/>, value: 82, label: "người đã nhận hỗ trợ" },
-  { icon: <MdFeed size={20} color="#52c41a"/>, value: 25, label: "bài đăng tuần này" },
+  {
+    icon: <BsBagHeartFill size={20} color="#ff4d4f" />,
+    value: 125,
+    label: "đồ dùng đã được tặng",
+  },
+  {
+    icon: <FaPeopleCarry size={20} color="#fa8c16" />,
+    value: 82,
+    label: "người đã nhận hỗ trợ",
+  },
+  {
+    icon: <MdFeed size={20} color="#52c41a" />,
+    value: 25,
+    label: "bài đăng tuần này",
+  },
 ];
 
 export default function NewsFeed() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("cho");
   const [search, setSearch] = useState("");
+
+  const fetchMatches = usePostStore((s) => s.fetchMatches);
+  const matchesMap = usePostStore((s) => s.matches);
 
   const user = useAuthStore((s) => s.user);
   const myUserId = useAuthStore((s) => Number(s.user?.id || 0));
@@ -39,37 +55,58 @@ export default function NewsFeed() {
 
   const { posts, loading, hasMore, loadMore } = usePosts(params);
 
-  const mappedPosts = posts.map((p) => ({
-    id: p.id,
-    type: p.loai_bai?.toLowerCase(),
-    user: {
-      id: p.nguoi_dung_id,
-      name: p.nguoi_dung_ten || "Ẩn danh",
-      avatar: p.nguoi_dung_ten?.charAt(0) || "?",
-      color: "#1890ff",
-    },
-    location: p.dia_diem,
-    time: new Date(p.created_at).toLocaleString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }),
-    likeCount: p.so_luot_thich || 0,
-    commentCount: p.so_binh_luan || 0,
-    title: p.tieu_de,
-    desc: p.mo_ta,
-    images:
-      tab === "cho"
-        ? p.hinh_anh_urls?.length
-          ? p.hinh_anh_urls
-          : p.hinh_anh_url
-            ? [p.hinh_anh_url]
-            : []
-        : [],
-    status: "con",
-  }));
+  useEffect(() => {
+    if (!posts.length) return;
+
+    posts.forEach((p) => {
+      fetchMatches(p.id);
+    });
+  }, [posts]);
+
+  const mappedPosts = posts.map((p) => {
+    const aiData = matchesMap[p.id] || [];
+
+    return {
+      id: p.id,
+      type: p.loai_bai?.toLowerCase(),
+      user: {
+        id: p.nguoi_dung_id,
+        name: p.nguoi_dung_ten || "Ẩn danh",
+        avatar: p.nguoi_dung_ten?.charAt(0) || "?",
+        color: "#1890ff",
+      },
+      location: p.dia_diem,
+      time: new Date(p.created_at).toLocaleString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      likeCount: p.so_luot_thich || 0,
+      commentCount: p.so_binh_luan || 0,
+      title: p.tieu_de,
+      desc: p.mo_ta,
+      images:
+        tab === "cho"
+          ? p.hinh_anh_urls?.length
+            ? p.hinh_anh_urls
+            : p.hinh_anh_url
+              ? [p.hinh_anh_url]
+              : []
+          : [],
+      status: "con",
+
+      // ✅ AI suggestions
+      aiSuggestions: aiData.map((m) => ({
+        id: m.post.id,
+        title: m.post.tieu_de,
+        location: m.post.dia_diem || "Không rõ",
+        matchScore: Math.round(m.match_percent || 0),
+        icon: "🤝", 
+      })),
+    };
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -244,9 +281,7 @@ export default function NewsFeed() {
 
             {/* Community stats */}
             <div className="nf-community-box">
-              <div className="nf-community-box__header">
-                TÁC ĐỘNG CỘNG ĐỒNG
-              </div>
+              <div className="nf-community-box__header">TÁC ĐỘNG CỘNG ĐỒNG</div>
               <div className="nf-community-stats">
                 {COMMUNITY_STATS.map((s, i) => (
                   <div

@@ -32,27 +32,31 @@ class NguoiDungSeeder extends Seeder
             'trang_thai' => 'HOAT_DONG'
         ]);
 
-        // tổ chức
-        User::create([
-            'ho_ten' => 'Tổ chức từ thiện',
-            'ten_tai_khoan' => 'tochuc',
-            'email' => 'tochuc@gmail.com',
-            'mat_khau' => $password,
-            'trang_thai' => 'HOAT_DONG'
-        ]);
-
         // tạo data bằng factory (KHÔNG insert)
         $users = User::factory()
             ->count(30)
             ->make()
             ->toArray();
 
-        // chỉnh lại field
-        foreach ($users as &$user) {
+        $fixedAddresses = [
+            '12 Bạch Đằng, Hải Châu, Đà Nẵng',
+            '123 Lê Lợi, Quận 1, TP.HCM',
+            '45 Tràng Tiền, Hoàn Kiếm, Hà Nội',
+        ];
+
+        foreach ($users as $index => &$user) {
+
             $user['mat_khau'] = $password;
             $user['trang_thai'] = 'HOAT_DONG';
             $user['created_at'] = $now;
             $user['updated_at'] = $now;
+
+            // 👉 luôn có dia_chi
+            if ($index < 3) {
+                $user['dia_chi'] = $fixedAddresses[$index];
+            } else {
+                $user['dia_chi'] = null; 
+            }
         }
 
         // chunk insert giống seeder trước

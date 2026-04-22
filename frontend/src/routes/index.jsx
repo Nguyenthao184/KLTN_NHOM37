@@ -29,6 +29,8 @@ import AdminPanel from "../pages/admin/AdminPanel/AdminPanel.jsx";
 import Login from "../pages/auth/Login/Login.jsx";
 import Register from "../pages/auth/Register/Register.jsx";
 import ForgotPassword from "../pages/auth/ForgotPassword/Forgot.jsx";
+import UserProfile from "../pages/guest/UserProfile/UserProfile.jsx";
+import OrgDashboard from "../pages/organization/Dashboard/OrgDashboard.jsx";
 // ================== PUBLIC ROUTES ==================
 const publicRoutes = [
   {
@@ -167,6 +169,26 @@ const publicRoutes = [
 
 // ================== PRIVATE ROUTES ==================
 const privateRoutes = [
+  {
+  path: "/thong-ke",
+  element: (
+    <ProtectedRoute>
+      <MainLayout>
+        <OrgDashboard />
+      </MainLayout>
+    </ProtectedRoute>
+  ),
+},
+  {
+  path: "/nguoi-dung/:id",
+  element: (
+    <ProtectedRoute>
+      <MainLayout>
+        <UserProfile />
+      </MainLayout>
+    </ProtectedRoute>
+  ),
+},
   {
     path: "/chien-dich/tao-moi",
     element: (

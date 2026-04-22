@@ -99,19 +99,28 @@ export default function Header() {
       navigate(`/${clickedItem.key}`);
     }
   };
+const roles = useAuthStore((s) => s.roles);
+const isOrg = Array.isArray(roles)
+  ? roles.some((r) => r === "TO_CHUC" || r?.ten === "TO_CHUC")
+  : false;
 
-  const items = [
-    {
-      key: "profile",
-      label: "Thông tin cá nhân",
-      onClick: () => navigate("/profile"),
-    },
-    {
-      key: "logout",
-      label: "Đăng xuất",
-      onClick: handleLogout,
-    },
-  ];
+const items = [
+  {
+    key: "profile",
+    label: "Thông tin cá nhân",
+    onClick: () => navigate("/profile"),
+  },
+  ...(isOrg ? [{
+    key: "thong-ke",
+    label: "Thống kê tổ chức",
+    onClick: () => navigate("/thong-ke"),
+  }] : []),
+  {
+    key: "logout",
+    label: "Đăng xuất",
+    onClick: handleLogout,
+  },
+];
 
   return (
     <header className="app-header full-bleed">

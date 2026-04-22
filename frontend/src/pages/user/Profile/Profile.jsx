@@ -9,6 +9,61 @@ import Footer from "../../../components/Footer/index.jsx";
 import PostCard from "../../../components/PostCard";
 import "./Profile.scss";
 
+const PREVIEW_AS_ORG = true;
+
+const MOCK_TO_CHUC = {
+  ten_to_chuc: "Quỹ Thiện Nguyện Ánh Sáng",
+  logo_url: null,
+  so_dien_thoai: "0236 123 456",
+  email: "quy@anhsang.vn",
+  dia_chi: "123 Nguyễn Văn Linh, Đà Nẵng",
+  mo_ta: "Quỹ từ thiện hoạt động vì cộng đồng.",
+  tai_khoan_gay_quy: {
+    ngan_hang: "MB Bank",
+    so_tai_khoan: "123456789",
+    chu_tai_khoan: "Quỹ Thiện Nguyện Ánh Sáng",
+    so_du: 125000000,
+    tong_thu: 380000000,
+    tong_chi: 255000000,
+  },
+};
+
+const MOCK_DONATIONS = [
+  {
+    id: 1,
+    chien_dich_id: 1,
+    so_tien: 18500000,
+    created_at: "2026-03-12T10:00:00",
+    chien_dich: {
+      ten_chien_dich: "Chung tay phẫu thuật tim cho bé Minh",
+      dia_diem: "Đà Nẵng",
+      anh_bia: "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?w=200&h=200&fit=crop",
+    },
+  },
+  {
+    id: 2,
+    chien_dich_id: 2,
+    so_tien: 42750000,
+    created_at: "2026-02-28T14:00:00",
+    chien_dich: {
+      ten_chien_dich: "Trao học bổng đến học sinh vùng cao",
+      dia_diem: "Kon Tum",
+      anh_bia: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200&h=200&fit=crop",
+    },
+  },
+  {
+    id: 3,
+    chien_dich_id: 3,
+    so_tien: 9600000,
+    created_at: "2026-01-15T09:00:00",
+    chien_dich: {
+      ten_chien_dich: "Bữa cơm 0 đồng cho bệnh nhân nghèo",
+      dia_diem: "TP. Hồ Chí Minh",
+      anh_bia: "https://images.unsplash.com/photo-1467453678174-768ec283a940?w=200&h=200&fit=crop",
+    },
+  },
+];
+
 export default function ProfilePage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -19,7 +74,7 @@ export default function ProfilePage() {
 
   const {
     profile,
-    donations,
+    donations: realDonations,
     myPosts,
     loading,
     handleUpdateProfile,
@@ -29,15 +84,26 @@ export default function ProfilePage() {
   const handleRegisterOrg = () => navigate("/dk-to-chuc");
 
   const profileUser = profile?.user;
-  const toChuc = profileUser?.to_chuc;
-  const taiKhoan = toChuc?.tai_khoan_gay_quy;
   const avatarUrl = profile?.avatar_url;
   const displayName = profileUser?.ho_ten || user?.ho_ten || "User";
-  const stk = taiKhoan?.so_tai_khoan || "0381000560588";
   const roles = profileUser?.vai_tro || user?.vai_tro || [];
-  const isOrganization = Array.isArray(roles)
-    ? roles.some((r) => r === "TO_CHUC" || r?.ten === "TO_CHUC")
-    : false;
+
+  const isOrganization =
+    PREVIEW_AS_ORG ||
+    (Array.isArray(roles)
+      ? roles.some((r) => r === "TO_CHUC" || r?.ten === "TO_CHUC")
+      : false);
+
+  const toChuc = PREVIEW_AS_ORG
+    ? (profileUser?.to_chuc || MOCK_TO_CHUC)
+    : profileUser?.to_chuc;
+
+  const donations = PREVIEW_AS_ORG && realDonations?.length === 0
+    ? MOCK_DONATIONS
+    : realDonations;
+
+  const taiKhoan = toChuc?.tai_khoan_gay_quy;
+  const stk = taiKhoan?.so_tai_khoan || "0381000560588";
 
   const toPostCard = (item) => ({
     id: item.id,
@@ -57,7 +123,7 @@ export default function ProfilePage() {
     aiSuggestions: [],
   });
 
-  if (loading && !profile) {
+  if (loading && !profile && !PREVIEW_AS_ORG) {
     return (
       <div className="profile-page profile-page--loading">
         <div className="profile-loading">
@@ -93,7 +159,7 @@ export default function ProfilePage() {
                   <span className="profile-badge">Verified</span>
                 </div>
                 <p className="profile-info__username">
-                  @{profileUser?.ten_tai_khoan || user?.email?.split("@")[0]}
+                  @{profileUser?.ten_tai_khoan || user?.email?.split("@")[0] || "user"}
                 </p>
                 {isOrganization && toChuc?.ten_to_chuc && (
                   <p className="profile-info__org">{toChuc.ten_to_chuc}</p>
@@ -138,24 +204,27 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div className="profile-bank__qr">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=64x64&data=STK:${stk}`} alt="QR" />
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=64x64&data=STK:${stk}`}
+                      alt="QR"
+                    />
                   </div>
                 </div>
                 <div className="profile-bank__balance-label">Số dư hiện tại</div>
                 <div className="profile-bank__balance">
-                  {taiKhoan?.so_du ? Number(taiKhoan.so_du).toLocaleString() + " đ" : "---"}
+                  {taiKhoan?.so_du ? Number(taiKhoan.so_du).toLocaleString("vi-VN") + " đ" : "---"}
                 </div>
                 <div className="profile-bank__row">
                   <div className="profile-bank__col">
                     <span className="profile-bank__col-label">↑ Tổng thu</span>
                     <span className="profile-bank__col-value profile-bank__col-value--green">
-                      {taiKhoan?.tong_thu ? Number(taiKhoan.tong_thu).toLocaleString() + " đ" : "---"}
+                      {taiKhoan?.tong_thu ? Number(taiKhoan.tong_thu).toLocaleString("vi-VN") + " đ" : "---"}
                     </span>
                   </div>
                   <div className="profile-bank__col">
                     <span className="profile-bank__col-label">↓ Tổng chi</span>
                     <span className="profile-bank__col-value profile-bank__col-value--red">
-                      {taiKhoan?.tong_chi ? Number(taiKhoan.tong_chi).toLocaleString() + " đ" : "---"}
+                      {taiKhoan?.tong_chi ? Number(taiKhoan.tong_chi).toLocaleString("vi-VN") + " đ" : "---"}
                     </span>
                   </div>
                 </div>
@@ -170,7 +239,7 @@ export default function ProfilePage() {
         <div className="profile-stats">
           <div className="profile-stats__item">
             <span>Tổng donate</span>
-            <strong>{Number(profile?.tong_tien_ung_ho || 0).toLocaleString()} vnđ</strong>
+            <strong>{Number(profile?.tong_tien_ung_ho || (PREVIEW_AS_ORG ? 380000000 : 0)).toLocaleString("vi-VN")} vnđ</strong>
           </div>
           <div className="profile-stats__sep" />
           <div className="profile-stats__item">
@@ -238,12 +307,19 @@ export default function ProfilePage() {
                             </div>
                           </div>
                           <div className="dh-card__right">
-                            <div className="dh-card__amt">{Number(item.so_tien || 0).toLocaleString()} đ</div>
-                            <div className="dh-card__date">{item.created_at?.substring(0, 10)}</div>
+                            <div className="dh-card__amt">
+                              {Number(item.so_tien || 0).toLocaleString("vi-VN")} đ
+                            </div>
+                            <div className="dh-card__date">
+                              {item.created_at?.substring(0, 10)}
+                            </div>
                           </div>
                         </div>
                         <div className="dh-card__bottom">
-                          <button className="dh-view-btn" onClick={() => navigate(`/chien-dich/chi-tiet/${item.chien_dich_id}`)}>
+                          <button
+                            className="dh-view-btn"
+                            onClick={() => navigate(`/chien-dich/chi-tiet/${item.chien_dich_id}`)}
+                          >
                             Xem
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                               <path d="M7 17L17 7M17 7H7M17 7v10" />
@@ -278,14 +354,16 @@ export default function ProfilePage() {
                 <div className="profile-empty">
                   <div className="profile-empty__icon">📝</div>
                   <p>Chưa có bài đăng nào</p>
-                  <p className="profile-empty__hint">Tạo bài đăng cho/nhận đồ để AI gợi ý ghép nối người phù hợp</p>
+                  <p className="profile-empty__hint">
+                    Tạo bài đăng cho/nhận đồ để AI gợi ý ghép nối người phù hợp
+                  </p>
                 </div>
               )}
             </div>
           )}
 
           {activeTab === "projects" && (
-            <div>
+            <div className="profile-tab-content">
               {isOrganization ? (
                 <div className="profile-empty">
                   <div className="profile-empty__icon">📂</div>
@@ -299,8 +377,12 @@ export default function ProfilePage() {
                 <div className="profile-empty">
                   <div className="profile-empty__icon">🏢</div>
                   <p>Chỉ tài khoản <strong>Tổ chức từ thiện</strong> mới có thể tạo dự án</p>
-                  <p className="profile-empty__hint">Đăng ký trở thành tổ chức để tạo và quản lý chiến dịch gây quỹ</p>
-                  <button className="profile-empty__btn" onClick={handleRegisterOrg}>Đăng ký tổ chức</button>
+                  <p className="profile-empty__hint">
+                    Đăng ký trở thành tổ chức để tạo và quản lý chiến dịch gây quỹ
+                  </p>
+                  <button className="profile-empty__btn" onClick={handleRegisterOrg}>
+                    Đăng ký tổ chức
+                  </button>
                 </div>
               )}
             </div>
@@ -336,6 +418,7 @@ function EditProfileModal({ user, profileUser, toChuc, avatarUrl, isOrganization
   const [avatarPreview, setAvatarPreview] = useState(avatarUrl || null);
   const [form, setForm] = useState({
     ho_ten: profileUser?.ho_ten || user?.ho_ten || "",
+    dia_chi_user: profileUser?.dia_chi || user?.dia_chi || "", // ← THÊM ĐỊA CHỈ USER
     so_dien_thoai: toChuc?.so_dien_thoai || "",
     email_to_chuc: toChuc?.email || "",
     dia_chi: toChuc?.dia_chi || "",
@@ -353,11 +436,10 @@ function EditProfileModal({ user, profileUser, toChuc, avatarUrl, isOrganization
     setLoading(true);
     const formData = new FormData();
     formData.append("ho_ten", form.ho_ten);
+    formData.append("dia_chi_user", form.dia_chi_user); // ← GỬI LÊN BE
     if (fileRef.current?.files[0]) formData.append("anh_dai_dien", fileRef.current.files[0]);
-
     const { ok } = await onUpdateProfile(formData);
     setLoading(false);
-
     if (ok) {
       notification.success({ message: "Lưu thay đổi thành công!", placement: "topRight" });
       onClose();
@@ -376,7 +458,11 @@ function EditProfileModal({ user, profileUser, toChuc, avatarUrl, isOrganization
         <div className="ep-modal__body">
           <div className="ep-avatar-row">
             <div className="ep-avatar">
-              {avatarPreview ? <img src={avatarPreview} alt="avatar" /> : <span>{(form.ho_ten || "U")[0]?.toUpperCase()}</span>}
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="avatar" />
+              ) : (
+                <span>{(form.ho_ten || "U")[0]?.toUpperCase()}</span>
+              )}
             </div>
             <div className="ep-avatar-actions">
               <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatar} />
@@ -387,31 +473,54 @@ function EditProfileModal({ user, profileUser, toChuc, avatarUrl, isOrganization
               <div className="ep-field">
                 <label>Tên đăng nhập</label>
                 <div className="ep-input ep-input--locked">
-                  <span>{profileUser?.ten_tai_khoan || user?.email?.split("@")[0]}</span>
+                  <span>{profileUser?.ten_tai_khoan || user?.email?.split("@")[0] || "user"}</span>
                   <span className="ep-lock-badge">khóa</span>
                 </div>
               </div>
               <div className="ep-field">
                 <label>Email</label>
                 <div className="ep-input ep-input--locked">
-                  <span>{profileUser?.email || user?.email}</span>
+                  <span>{profileUser?.email || user?.email || "---"}</span>
                   <span className="ep-lock-badge">khóa</span>
                 </div>
               </div>
             </div>
           </div>
+
           <div className="ep-divider" />
           <div className="ep-section-title">
             <span className="ep-section-title__bar" />THÔNG TIN CÁ NHÂN
           </div>
+
           <div className="ep-field">
             <label>Họ và tên <span className="ep-required">*</span></label>
-            <input className="ep-input ep-input--text" name="ho_ten" value={form.ho_ten} onChange={handleChange} placeholder="Nhập họ và tên" />
+            <input
+              className="ep-input ep-input--text"
+              name="ho_ten"
+              value={form.ho_ten}
+              onChange={handleChange}
+              placeholder="Nhập họ và tên"
+            />
           </div>
+
+          {/* ← TRƯỜNG ĐỊA CHỈ NGƯỜI DÙNG */}
+          <div className="ep-field">
+            <label>Địa chỉ</label>
+            <input
+              className="ep-input ep-input--text"
+              name="dia_chi_user"
+              value={form.dia_chi_user}
+              onChange={handleChange}
+              placeholder="123 Nguyễn Văn Linh, Đà Nẵng"
+            />
+          </div>
+
           {isOrganization && (
             <>
               <div className="ep-divider" />
-              <div className="ep-section-title"><span className="ep-section-title__bar" />TỔ CHỨC</div>
+              <div className="ep-section-title">
+                <span className="ep-section-title__bar" />TỔ CHỨC
+              </div>
               <div className="ep-field">
                 <label>Tên tổ chức</label>
                 <div className="ep-input ep-input--locked">
@@ -422,20 +531,45 @@ function EditProfileModal({ user, profileUser, toChuc, avatarUrl, isOrganization
               <div className="ep-grid-2">
                 <div className="ep-field">
                   <label>Số điện thoại</label>
-                  <input className="ep-input ep-input--text" name="so_dien_thoai" value={form.so_dien_thoai} onChange={handleChange} placeholder="0236 123 456" />
+                  <input
+                    className="ep-input ep-input--text"
+                    name="so_dien_thoai"
+                    value={form.so_dien_thoai}
+                    onChange={handleChange}
+                    placeholder="0236 123 456"
+                  />
                 </div>
                 <div className="ep-field">
-                  <label>Địa chỉ</label>
-                  <input className="ep-input ep-input--text" name="dia_chi" value={form.dia_chi} onChange={handleChange} placeholder="123 Nguyễn Văn Linh, ĐN" />
+                  <label>Địa chỉ tổ chức</label>
+                  <input
+                    className="ep-input ep-input--text"
+                    name="dia_chi"
+                    value={form.dia_chi}
+                    onChange={handleChange}
+                    placeholder="123 Nguyễn Văn Linh, ĐN"
+                  />
                 </div>
               </div>
               <div className="ep-field">
                 <label>Email tổ chức</label>
-                <input className="ep-input ep-input--text" name="email_to_chuc" value={form.email_to_chuc} onChange={handleChange} placeholder="email@tochuc.com" />
+                <input
+                  className="ep-input ep-input--text"
+                  name="email_to_chuc"
+                  value={form.email_to_chuc}
+                  onChange={handleChange}
+                  placeholder="email@tochuc.com"
+                />
               </div>
               <div className="ep-field">
                 <label>Mô tả</label>
-                <textarea className="ep-input ep-input--textarea" name="mo_ta" value={form.mo_ta} onChange={handleChange} placeholder="Mô tả về tổ chức..." rows={3} />
+                <textarea
+                  className="ep-input ep-input--textarea"
+                  name="mo_ta"
+                  value={form.mo_ta}
+                  onChange={handleChange}
+                  placeholder="Mô tả về tổ chức..."
+                  rows={3}
+                />
               </div>
             </>
           )}
@@ -452,9 +586,7 @@ function EditProfileModal({ user, profileUser, toChuc, avatarUrl, isOrganization
 }
 
 function ChangePasswordModal({ profileUser, onChangePassword, onClose }) {
-  // Check nếu là Google user (chưa có mật khẩu)
   const isGoogleUser = !!profileUser?.google_id;
-
   const [form, setForm] = useState({ old: "", new: "", confirm: "" });
   const [show, setShow] = useState({ old: false, new: false, confirm: false });
   const [loading, setLoading] = useState(false);
@@ -463,56 +595,29 @@ function ChangePasswordModal({ profileUser, onChangePassword, onClose }) {
   const toggleShow = (field) => setShow({ ...show, [field]: !show[field] });
 
   const handleSubmit = async () => {
-    // Validate
-    if (isGoogleUser) {
-      if (!form.new || !form.confirm) {
-        notification.warning({ message: "Vui lòng điền đầy đủ!", placement: "topRight" });
-        return;
-      }
-    } else {
-      if (!form.old || !form.new || !form.confirm) {
-        notification.warning({ message: "Vui lòng điền đầy đủ!", placement: "topRight" });
-        return;
-      }
+    if (!isGoogleUser && !form.old) {
+      notification.warning({ message: "Vui lòng điền đầy đủ!", placement: "topRight" }); return;
     }
-
+    if (!form.new || !form.confirm) {
+      notification.warning({ message: "Vui lòng điền đầy đủ!", placement: "topRight" }); return;
+    }
     if (form.new !== form.confirm) {
-      notification.warning({ message: "Mật khẩu mới không khớp!", placement: "topRight" });
-      return;
+      notification.warning({ message: "Mật khẩu mới không khớp!", placement: "topRight" }); return;
     }
-
     if (form.new.length < 6) {
-      notification.warning({ message: "Mật khẩu phải có ít nhất 6 ký tự!", placement: "topRight" });
-      return;
+      notification.warning({ message: "Mật khẩu phải có ít nhất 6 ký tự!", placement: "topRight" }); return;
     }
-
     setLoading(true);
-
     const payload = isGoogleUser
-      ? {
-          new_password: form.new,
-          new_password_confirmation: form.confirm,
-        }
-      : {
-          current_password: form.old,
-          new_password: form.new,
-          new_password_confirmation: form.confirm,
-        };
-
+      ? { new_password: form.new, new_password_confirmation: form.confirm }
+      : { current_password: form.old, new_password: form.new, new_password_confirmation: form.confirm };
     const { ok, err } = await onChangePassword(payload);
     setLoading(false);
-
     if (ok) {
-      notification.success({
-        message: isGoogleUser ? "Tạo mật khẩu thành công!" : "Đổi mật khẩu thành công!",
-        placement: "topRight"
-      });
+      notification.success({ message: isGoogleUser ? "Tạo mật khẩu thành công!" : "Đổi mật khẩu thành công!", placement: "topRight" });
       onClose();
     } else {
-      notification.error({
-        message: err?.response?.data?.message || (isGoogleUser ? "Tạo mật khẩu thất bại!" : "Đổi mật khẩu thất bại!"),
-        placement: "topRight"
-      });
+      notification.error({ message: err?.response?.data?.message || "Thất bại!", placement: "topRight" });
     }
   };
 
@@ -530,17 +635,9 @@ function ChangePasswordModal({ profileUser, onChangePassword, onClose }) {
 
   const themeColor = isGoogleUser ? "#f59e0b" : "#E24B4A";
   const themeBgLight = isGoogleUser ? "#fef3c7" : "#fff0f0";
-
   const fields = isGoogleUser
-    ? [
-        { label: "Mật khẩu mới", name: "new" },
-        { label: "Xác nhận mật khẩu", name: "confirm" },
-      ]
-    : [
-        { label: "Mật khẩu hiện tại", name: "old" },
-        { label: "Mật khẩu mới", name: "new" },
-        { label: "Xác nhận mật khẩu", name: "confirm" },
-      ];
+    ? [{ label: "Mật khẩu mới", name: "new" }, { label: "Xác nhận mật khẩu", name: "confirm" }]
+    : [{ label: "Mật khẩu hiện tại", name: "old" }, { label: "Mật khẩu mới", name: "new" }, { label: "Xác nhận mật khẩu", name: "confirm" }];
 
   return (
     <div className="ep-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -557,31 +654,9 @@ function ChangePasswordModal({ profileUser, onChangePassword, onClose }) {
               </svg>
             </div>
             <p style={{ fontSize: 13, color: "#888", margin: 0 }}>
-              {isGoogleUser
-                ? "Bạn đăng nhập bằng Google"
-                : "Nhập mật khẩu cũ và mật khẩu mới để thay đổi"}
+              {isGoogleUser ? "Bạn đăng nhập bằng Google" : "Nhập mật khẩu cũ và mật khẩu mới để thay đổi"}
             </p>
           </div>
-
-          {isGoogleUser && (
-            <div style={{
-              background: "#fef3c7",
-              borderRadius: 8,
-              padding: "12px 14px",
-              margin: "12px 0",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 10
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <p style={{ fontSize: 13, color: "#92400e", margin: 0, lineHeight: 1.5 }}>
-                Bạn chưa có mật khẩu. Hãy tạo mật khẩu để có thể đăng nhập bằng email.
-              </p>
-            </div>
-          )}
-
           {fields.map((f) => (
             <div key={f.name} className="ep-field" style={{ width: "100%" }}>
               <label>{f.label} <span className="ep-required">*</span></label>
@@ -593,7 +668,7 @@ function ChangePasswordModal({ profileUser, onChangePassword, onClose }) {
                   value={form[f.name]}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  style={{ paddingRight: 40, background: "#fff", color: "#1a1a1a" }}
+                  style={{ paddingRight: 40 }}
                 />
                 <button type="button" onClick={() => toggleShow(f.name)}
                   style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 0, display: "flex", alignItems: "center" }}>

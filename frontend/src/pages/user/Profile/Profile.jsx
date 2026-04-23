@@ -1,128 +1,109 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../services/api";
+import { notification } from "antd";
+import useAuthStore from "../../../store/authStore";
+import useProfile from "../../../hooks/useProfile";
 import banner from "../../../assets/canhbao.png";
 import Header from "../../../components/Header/index.jsx";
 import Footer from "../../../components/Footer/index.jsx";
 import PostCard from "../../../components/PostCard";
 import "./Profile.scss";
 
-// ── MOCK để xem giao diện — sau này thay bằng useAuth() ──────────────
-const MOCK_USER = { name: "Thao Ly", email: "thaoly@gmail.com" };
-const MOCK_ROLES = ["TO_CHUC"];
-// ─────────────────────────────────────────────────────────────────────
+const PREVIEW_AS_ORG = true;
 
-const MOCK_POSTS = [
+const MOCK_TO_CHUC = {
+  ten_to_chuc: "Quỹ Thiện Nguyện Ánh Sáng",
+  logo_url: null,
+  so_dien_thoai: "0236 123 456",
+  email: "quy@anhsang.vn",
+  dia_chi: "123 Nguyễn Văn Linh, Đà Nẵng",
+  mo_ta: "Quỹ từ thiện hoạt động vì cộng đồng.",
+  tai_khoan_gay_quy: {
+    ngan_hang: "MB Bank",
+    so_tai_khoan: "123456789",
+    chu_tai_khoan: "Quỹ Thiện Nguyện Ánh Sáng",
+    so_du: 125000000,
+    tong_thu: 380000000,
+    tong_chi: 255000000,
+  },
+};
+
+const MOCK_DONATIONS = [
   {
     id: 1,
-    tieu_de: "Sách TOEIC 750+ còn mới 90%",
-    mo_ta:
-      "Mình có bộ sách luyện thi TOEIC, dùng một lần còn rất mới, tặng bạn nào cần ôn thi.",
-    dia_diem: "Hoà Khánh, Đà Nẵng",
-    loai_bai: "CHO",
-    trang_thai: "CON_TANG",
-    created_at: "16:40 20/03/2025",
-    luot_thich: 5,
+    chien_dich_id: 1,
+    so_tien: 18500000,
+    created_at: "2026-03-12T10:00:00",
+    chien_dich: {
+      ten_chien_dich: "Chung tay phẫu thuật tim cho bé Minh",
+      dia_diem: "Đà Nẵng",
+      anh_bia: "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?w=200&h=200&fit=crop",
+    },
   },
   {
     id: 2,
-    tieu_de: "Cần nhận quần áo trẻ em size 3-5 tuổi",
-    mo_ta:
-      "Gia đình mình có 2 bé, cần quần áo mùa hè cho các bé, xin trân trọng cảm ơn.",
-    dia_diem: "Liên Chiểu, Đà Nẵng",
-    loai_bai: "NHAN",
-    trang_thai: "CON_NHAN",
-    created_at: "12:20 07/03/2025",
-    luot_thich: 8,
+    chien_dich_id: 2,
+    so_tien: 42750000,
+    created_at: "2026-02-28T14:00:00",
+    chien_dich: {
+      ten_chien_dich: "Trao học bổng đến học sinh vùng cao",
+      dia_diem: "Kon Tum",
+      anh_bia: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200&h=200&fit=crop",
+    },
   },
   {
     id: 3,
-    tieu_de: "Xe đạp mini cho bé gái",
-    mo_ta:
-      "Xe đạp mini màu hồng cho bé 4-6 tuổi, còn dùng được tốt, tặng không lấy tiền.",
-    dia_diem: "Thanh Khê, Đà Nẵng",
-    loai_bai: "CHO",
-    trang_thai: "DA_TANG",
-    created_at: "08:12 31/05/2025",
-    luot_thich: 12,
+    chien_dich_id: 3,
+    so_tien: 9600000,
+    created_at: "2026-01-15T09:00:00",
+    chien_dich: {
+      ten_chien_dich: "Bữa cơm 0 đồng cho bệnh nhân nghèo",
+      dia_diem: "TP. Hồ Chí Minh",
+      anh_bia: "https://images.unsplash.com/photo-1467453678174-768ec283a940?w=200&h=200&fit=crop",
+    },
   },
 ];
 
 export default function ProfilePage() {
-  const user = MOCK_USER;
-  const roles = MOCK_ROLES;
-  // ──────────────────────────────────────────────────────────
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("history");
-  const [profile, setProfile] = useState(null);
-  const [posts] = useState(MOCK_POSTS);
   const [likedMap, setLikedMap] = useState({});
-  const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  const handleRegisterOrg = () => {
-    navigate("/bang-tin/dk-to-chuc");
-  };
+  const {
+    profile,
+    donations: realDonations,
+    myPosts,
+    loading,
+    handleUpdateProfile,
+    handleChangePassword,
+  } = useProfile();
 
-  // ── TODO: sau này giữ nguyên check này, chỉ cần roles từ useAuth() ──
-  const isOrganization = roles?.includes("TO_CHUC");
-  // ────────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await api.get("/user/profile");
-        setProfile(res.data);
-      } catch (e) {
-        // TODO: khi có API thật thì xóa dòng console.error này nếu muốn
-        console.error("Lỗi lấy profile:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
+  const handleRegisterOrg = () => navigate("/dk-to-chuc");
 
   const profileUser = profile?.user;
-  const toChuc = profileUser?.to_chuc;
-  const taiKhoan = toChuc?.tai_khoan_gay_quy;
   const avatarUrl = profile?.avatar_url;
-  const displayName = profileUser?.ho_ten || user?.name || "User";
-  const stk = taiKhoan?.so_tai_khoan || "0381000560588";
+  const displayName = profileUser?.ho_ten || user?.ho_ten || "User";
+  const roles = profileUser?.vai_tro || user?.vai_tro || [];
 
-  const donations = [
-    {
-      id: 1,
-      title: "Giảm thiệt hại thiên tai miền Trung",
-      add: "Đà Nẵng",
-      cat: "Khẩn cấp",
-      amount: "500,000",
-      date: "16:40 15/03/2026",
-      percent: 73,
-      coverBg: "linear-gradient(135deg, #fff0f0, #ffe8e8)",
-    },
-    {
-      id: 2,
-      title: "Xây trường cho trẻ em vùng cao",
-      add: "Hà Nội",
-      cat: "Giáo dục",
-      amount: "500,000",
-      date: "12:02 10/03/2026",
-      percent: 35,
-      coverBg: "linear-gradient(135deg, #fff7e6, #faeeda)",
-    },
-    {
-      id: 3,
-      title: "Hội người khuyết tật Đà Nẵng",
-      add: "TP. Hồ Chí Minh",
-      cat: "Cộng đồng",
-      amount: "200,000",
-      date: "07:12 01/03/2026",
-      percent: 100,
-      coverBg: "linear-gradient(135deg, #f0fff4, #e1f5ee)",
-    },
-  ];
+  const isOrganization =
+    PREVIEW_AS_ORG ||
+    (Array.isArray(roles)
+      ? roles.some((r) => r === "TO_CHUC" || r?.ten === "TO_CHUC")
+      : false);
+
+  const toChuc = PREVIEW_AS_ORG
+    ? (profileUser?.to_chuc || MOCK_TO_CHUC)
+    : profileUser?.to_chuc;
+
+  const donations = PREVIEW_AS_ORG && realDonations?.length === 0
+    ? MOCK_DONATIONS
+    : realDonations;
+
+  const taiKhoan = toChuc?.tai_khoan_gay_quy;
+  const stk = taiKhoan?.so_tai_khoan || "0381000560588";
 
   const toPostCard = (item) => ({
     id: item.id,
@@ -142,7 +123,7 @@ export default function ProfilePage() {
     aiSuggestions: [],
   });
 
-  if (loading) {
+  if (loading && !profile && !PREVIEW_AS_ORG) {
     return (
       <div className="profile-page profile-page--loading">
         <div className="profile-loading">
@@ -158,7 +139,6 @@ export default function ProfilePage() {
       <Header />
       <div className="profile-page">
         <div className="profile-header">
-          {/* Trái: avatar + info */}
           <div className="profile-header__left">
             <div className="profile-header__actions">
               <div className="profile-avatar">
@@ -170,12 +150,7 @@ export default function ProfilePage() {
                   )}
                 </div>
                 {isOrganization && (
-                  <div
-                    className="profile-avatar__org-badge"
-                    title="Tổ chức xác minh"
-                  >
-                    ✓
-                  </div>
+                  <div className="profile-avatar__org-badge" title="Tổ chức xác minh">✓</div>
                 )}
               </div>
               <div className="profile-info">
@@ -184,7 +159,7 @@ export default function ProfilePage() {
                   <span className="profile-badge">Verified</span>
                 </div>
                 <p className="profile-info__username">
-                  @{profileUser?.ten_tai_khoan || user?.email?.split("@")[0]}
+                  @{profileUser?.ten_tai_khoan || user?.email?.split("@")[0] || "user"}
                 </p>
                 {isOrganization && toChuc?.ten_to_chuc && (
                   <p className="profile-info__org">{toChuc.ten_to_chuc}</p>
@@ -192,35 +167,15 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="profile-actions">
-              <button
-                className="profile-btn profile-btn--green"
-                onClick={() => setShowEditModal(true)}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
+              <button className="profile-btn profile-btn--green" onClick={() => setShowEditModal(true)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
                 Chỉnh sửa hồ sơ
               </button>
-              <button
-                className="profile-btn profile-btn--outline"
-                onClick={() => setShowPasswordModal(true)}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
+              <button className="profile-btn profile-btn--outline" onClick={() => setShowPasswordModal(true)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <rect x="3" y="11" width="18" height="11" rx="2" />
                   <path d="M7 11V7a5 5 0 0110 0v4" />
                 </svg>
@@ -234,111 +189,18 @@ export default function ProfilePage() {
               <div className="profile-bank">
                 <div className="profile-bank__header">
                   <div className="profile-bank__header-left">
-                    <div
-                      className={`profile-bank__logo${toChuc?.logo_url ? " profile-bank__logo--has-img" : ""}`}
-                    >
+                    <div className={`profile-bank__logo${toChuc?.logo_url ? " profile-bank__logo--has-img" : ""}`}>
                       {toChuc?.logo_url ? (
                         <img src={toChuc.logo_url} alt="logo" />
                       ) : (
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#fff"
-                          strokeWidth="1.5"
-                        >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5">
                           <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-14h1m4 0h1m-6 4h1m4 0h1m-5 10v-5h4v5" />
                         </svg>
                       )}
                     </div>
                     <div>
-                      <h3>
-                        {toChuc?.ten_to_chuc || "Quỹ Thiện Nguyện Ánh Sáng"}
-                      </h3>
-                      <p>
-                        {taiKhoan?.ngan_hang || "MB Bank"}
-                        {(() => {
-                          const lh = toChuc?.loai_hinh;
-                          const map = {
-                            TO_CHUC_NHA_NUOC: {
-                              label: "Nhà nước",
-                              color: "rgba(24,144,255,.2)",
-                              textColor: "#91caff",
-                              border: "rgba(24,144,255,.3)",
-                              icon: (
-                                <svg
-                                  width="9"
-                                  height="9"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-14h1m4 0h1m-6 4h1m4 0h1m-5 10v-5h4v5" />
-                                </svg>
-                              ),
-                            },
-                            QUY_TU_THIEN: {
-                              label: "Từ thiện",
-                              color: "rgba(82,196,26,.2)",
-                              textColor: "#95de64",
-                              border: "rgba(82,196,26,.3)",
-                              icon: (
-                                <svg
-                                  width="9"
-                                  height="9"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                                </svg>
-                              ),
-                            },
-                            DOANH_NGHIEP: {
-                              label: "Doanh nghiệp",
-                              color: "rgba(250,140,22,.2)",
-                              textColor: "#ffc069",
-                              border: "rgba(250,140,22,.3)",
-                              icon: (
-                                <svg
-                                  width="9"
-                                  height="9"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <rect
-                                    x="2"
-                                    y="7"
-                                    width="20"
-                                    height="14"
-                                    rx="2"
-                                  />
-                                  <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
-                                </svg>
-                              ),
-                            },
-                          };
-                          const info = map[lh];
-                          if (!info) return null;
-                          return (
-                            <span
-                              className="profile-bank__loaihinh"
-                              style={{
-                                background: info.color,
-                                color: info.textColor,
-                                borderColor: info.border,
-                              }}
-                            >
-                              {info.icon} {info.label}
-                            </span>
-                          );
-                        })()}
-                      </p>
+                      <h3>{toChuc?.ten_to_chuc || "Quỹ Thiện Nguyện Ánh Sáng"}</h3>
+                      <p>{taiKhoan?.ngan_hang || "MB Bank"}</p>
                     </div>
                   </div>
                   <div className="profile-bank__qr">
@@ -348,46 +210,41 @@ export default function ProfilePage() {
                     />
                   </div>
                 </div>
-
-                <div className="profile-bank__balance-label">
-                  Số dư hiện tại
+                <div className="profile-bank__balance-label">Số dư hiện tại</div>
+                <div className="profile-bank__balance">
+                  {taiKhoan?.so_du ? Number(taiKhoan.so_du).toLocaleString("vi-VN") + " đ" : "---"}
                 </div>
-                <div className="profile-bank__balance">7.486.215.966 đ</div>
-
                 <div className="profile-bank__row">
                   <div className="profile-bank__col">
                     <span className="profile-bank__col-label">↑ Tổng thu</span>
                     <span className="profile-bank__col-value profile-bank__col-value--green">
-                      691,862,915,028 đ
+                      {taiKhoan?.tong_thu ? Number(taiKhoan.tong_thu).toLocaleString("vi-VN") + " đ" : "---"}
                     </span>
                   </div>
                   <div className="profile-bank__col">
                     <span className="profile-bank__col-label">↓ Tổng chi</span>
                     <span className="profile-bank__col-value profile-bank__col-value--red">
-                      684,370,689,062 đ
+                      {taiKhoan?.tong_chi ? Number(taiKhoan.tong_chi).toLocaleString("vi-VN") + " đ" : "---"}
                     </span>
                   </div>
                 </div>
-
                 <div className="profile-bank__stk">
-                  STK: {stk} ·{" "}
-                  {taiKhoan?.chu_tai_khoan || "Quỹ Thiện Nguyện Ánh Sáng"}
+                  STK: {stk} · {taiKhoan?.chu_tai_khoan || toChuc?.ten_to_chuc || "---"}
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Stats ── */}
         <div className="profile-stats">
           <div className="profile-stats__item">
             <span>Tổng donate</span>
-            <strong>1,000,000 vnđ</strong>
+            <strong>{Number(profile?.tong_tien_ung_ho || (PREVIEW_AS_ORG ? 380000000 : 0)).toLocaleString("vi-VN")} vnđ</strong>
           </div>
           <div className="profile-stats__sep" />
           <div className="profile-stats__item">
             <span>Bài đăng</span>
-            <strong>{posts.length} bài</strong>
+            <strong>{myPosts.length} bài</strong>
           </div>
           <div className="profile-stats__sep" />
           <div className="profile-stats__item">
@@ -396,7 +253,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Tabs ── */}
         <div className="profile-tabs">
           {[
             { key: "history", label: "Lịch sử ủng hộ" },
@@ -413,144 +269,85 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* ── Tab content ── */}
         <div className="profile-content">
-          {/* Lịch sử ủng hộ */}
           {activeTab === "history" && (
             <div className="dh">
               <div className="dh-header">
                 <h3 className="dh-header__title">
                   <span className="dh-header__icon">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#fff"
-                      strokeWidth="2"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
                       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                     </svg>
                   </span>
                   Lịch sử ủng hộ
                 </h3>
-                <span className="dh-header__total">
-                  {donations.length} lần ủng hộ
-                </span>
+                <span className="dh-header__total">{donations.length} lần ủng hộ</span>
               </div>
-
-              <div className="dh-timeline">
-                {donations?.map((item) => (
-                  <div key={item.id} className="dh-card">
-                    <div className="dh-card__cover">
-                      <img src={banner} alt={item.title || "campaign"} />
-                    </div>
-
-                    <div className="dh-card__main">
-                      <div className="dh-card__top">
-                        <div className="dh-card__info">
-                          <h4>{item.title}</h4>
-
-                          <div className="dh-card__sub">
-                            <svg
-                              width="10"
-                              height="10"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                              <path d="M12 6v6l4 2" />
-                            </svg>
-
-                            {item.add}
-
-                            <span
-                              className="dh-card__tag"
-                              style={{ background: `${item.dotColor}18` }}
-                            >
-                              {item.cat}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="dh-card__right">
-                          <div className="dh-card__amt">
-                            {item.amount?.toLocaleString()} đ
-                          </div>
-                          <div className="dh-card__date">{item.date}</div>
-                        </div>
+              {donations.length === 0 ? (
+                <div className="profile-empty">
+                  <div className="profile-empty__icon">💝</div>
+                  <p>Chưa có lịch sử ủng hộ</p>
+                </div>
+              ) : (
+                <div className="dh-timeline">
+                  {donations.map((item, i) => (
+                    <div key={item.id || i} className="dh-card">
+                      <div className="dh-card__cover">
+                        <img src={item.chien_dich?.anh_bia || banner} alt={item.chien_dich?.ten_chien_dich || "campaign"} />
                       </div>
-
-                      <div className="dh-card__bottom">
-                        <div className="dh-card__progress-wrap">
-                          <div className="dh-card__progress-label">
-                            <span>Tiến độ chiến dịch</span>
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                color: item.dotColor,
-                              }}
-                            >
-                              {item.percent}%
-                            </span>
+                      <div className="dh-card__main">
+                        <div className="dh-card__top">
+                          <div className="dh-card__info">
+                            <h4>{item.chien_dich?.ten_chien_dich || "Chiến dịch"}</h4>
+                            <div className="dh-card__sub">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+                              </svg>
+                              {item.chien_dich?.dia_diem || "---"}
+                            </div>
                           </div>
-
-                          <div className="dh-card__progress-bar">
-                            <div
-                              className="dh-card__progress-fill"
-                              style={{
-                                width: `${Math.min(item.percent || 0, 100)}%`,
-                              }}
-                            />
+                          <div className="dh-card__right">
+                            <div className="dh-card__amt">
+                              {Number(item.so_tien || 0).toLocaleString("vi-VN")} đ
+                            </div>
+                            <div className="dh-card__date">
+                              {item.created_at?.substring(0, 10)}
+                            </div>
                           </div>
                         </div>
-
-                        <button className="dh-view-btn">
-                          Xem
-                          <svg
-                            width="10"
-                            height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
+                        <div className="dh-card__bottom">
+                          <button
+                            className="dh-view-btn"
+                            onClick={() => navigate(`/chien-dich/chi-tiet/${item.chien_dich_id}`)}
                           >
-                            <path d="M7 17L17 7M17 7H7M17 7v10" />
-                          </svg>
-                        </button>
+                            Xem
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M7 17L17 7M17 7H7M17 7v10" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Bài đăng */}
           {activeTab === "posts" && (
             <div className="profile-posts">
               <div className="profile-posts__action">
-                <button
-                  className="profile-empty__btn"
-                  onClick={() => (window.location.href = "/bang-tin/tao-moi")}
-                >
+                <button className="profile-empty__btn" onClick={() => navigate("/bang-tin/tao-moi")}>
                   + Tạo bài đăng
                 </button>
               </div>
-              {posts.length > 0 ? (
-                posts.map((item) => (
+              {myPosts.length > 0 ? (
+                myPosts.map((item) => (
                   <PostCard
                     key={item.id}
                     post={toPostCard(item)}
                     liked={!!likedMap[item.id]}
-                    onLike={() =>
-                      setLikedMap((prev) => ({
-                        ...prev,
-                        [item.id]: !prev[item.id],
-                      }))
-                    }
+                    onLike={() => setLikedMap((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
                   />
                 ))
               ) : (
@@ -565,38 +362,25 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Dự án */}
           {activeTab === "projects" && (
-            <div>
+            <div className="profile-tab-content">
               {isOrganization ? (
                 <div className="profile-empty">
                   <div className="profile-empty__icon">📂</div>
                   <p>Chưa có dự án nào</p>
-                  <p className="profile-empty__hint">
-                    Tạo chiến dịch gây quỹ để bắt đầu
-                  </p>
-                  <button
-                    className="profile-empty__btn"
-                    onClick={() => (window.location.href = "/tao-chien-dich")}
-                  >
+                  <p className="profile-empty__hint">Tạo chiến dịch gây quỹ để bắt đầu</p>
+                  <button className="profile-empty__btn" onClick={() => navigate("/chien-dich/tao-moi")}>
                     + Tạo chiến dịch
                   </button>
                 </div>
               ) : (
                 <div className="profile-empty">
                   <div className="profile-empty__icon">🏢</div>
-                  <p>
-                    Chỉ tài khoản <strong>Tổ chức từ thiện</strong> mới có thể
-                    tạo dự án
-                  </p>
+                  <p>Chỉ tài khoản <strong>Tổ chức từ thiện</strong> mới có thể tạo dự án</p>
                   <p className="profile-empty__hint">
-                    Đăng ký trở thành tổ chức để tạo và quản lý chiến dịch gây
-                    quỹ
+                    Đăng ký trở thành tổ chức để tạo và quản lý chiến dịch gây quỹ
                   </p>
-                  <button
-                    className="profile-empty__btn"
-                    onClick={handleRegisterOrg}
-                  >
+                  <button className="profile-empty__btn" onClick={handleRegisterOrg}>
                     Đăng ký tổ chức
                   </button>
                 </div>
@@ -605,7 +389,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* ── Modals ── */}
         {showEditModal && (
           <EditProfileModal
             user={user}
@@ -613,11 +396,16 @@ export default function ProfilePage() {
             toChuc={toChuc}
             avatarUrl={avatarUrl}
             isOrganization={isOrganization}
+            onUpdateProfile={handleUpdateProfile}
             onClose={() => setShowEditModal(false)}
           />
         )}
         {showPasswordModal && (
-          <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />
+          <ChangePasswordModal
+            profileUser={profileUser}
+            onChangePassword={handleChangePassword}
+            onClose={() => setShowPasswordModal(false)}
+          />
         )}
       </div>
       <Footer />
@@ -625,52 +413,47 @@ export default function ProfilePage() {
   );
 }
 
-// ── Edit Profile Modal ────────────────────────────────────────────────
-function EditProfileModal({
-  user,
-  profileUser,
-  toChuc,
-  avatarUrl,
-  isOrganization,
-  onClose,
-}) {
+function EditProfileModal({ user, profileUser, toChuc, avatarUrl, isOrganization, onUpdateProfile, onClose }) {
   const fileRef = useRef(null);
   const [avatarPreview, setAvatarPreview] = useState(avatarUrl || null);
   const [form, setForm] = useState({
-    ho_ten: profileUser?.ho_ten || user?.name || "",
-    ten_to_chuc: toChuc?.ten_to_chuc || "",
+    ho_ten: profileUser?.ho_ten || user?.ho_ten || "",
+    dia_chi_user: profileUser?.dia_chi || user?.dia_chi || "", // ← THÊM ĐỊA CHỈ USER
     so_dien_thoai: toChuc?.so_dien_thoai || "",
     email_to_chuc: toChuc?.email || "",
     dia_chi: toChuc?.dia_chi || "",
     mo_ta: toChuc?.mo_ta || "",
   });
   const [loading, setLoading] = useState(false);
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const handleAvatar = (e) => {
     const file = e.target.files[0];
     if (file) setAvatarPreview(URL.createObjectURL(file));
   };
-  const handleSubmit = () => {
+
+  const handleSubmit = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      alert("Lưu thay đổi thành công!");
+    const formData = new FormData();
+    formData.append("ho_ten", form.ho_ten);
+    formData.append("dia_chi_user", form.dia_chi_user); // ← GỬI LÊN BE
+    if (fileRef.current?.files[0]) formData.append("anh_dai_dien", fileRef.current.files[0]);
+    const { ok } = await onUpdateProfile(formData);
+    setLoading(false);
+    if (ok) {
+      notification.success({ message: "Lưu thay đổi thành công!", placement: "topRight" });
       onClose();
-    }, 800);
+    } else {
+      notification.error({ message: "Lưu thất bại, thử lại!", placement: "topRight" });
+    }
   };
 
   return (
-    <div
-      className="ep-overlay"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
+    <div className="ep-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="ep-modal">
         <div className="ep-modal__header">
           <span>Chỉnh sửa hồ sơ</span>
-          <button className="ep-modal__close" onClick={onClose}>
-            ✕
-          </button>
+          <button className="ep-modal__close" onClick={onClose}>✕</button>
         </div>
         <div className="ep-modal__body">
           <div className="ep-avatar-row">
@@ -682,40 +465,22 @@ function EditProfileModal({
               )}
             </div>
             <div className="ep-avatar-actions">
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={handleAvatar}
-              />
-              <button
-                className="ep-btn-sm ep-btn-sm--green"
-                onClick={() => fileRef.current?.click()}
-              >
-                Chọn ảnh
-              </button>
-              <button
-                className="ep-btn-sm ep-btn-sm--red"
-                onClick={() => setAvatarPreview(null)}
-              >
-                Xóa
-              </button>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatar} />
+              <button className="ep-btn-sm ep-btn-sm--green" onClick={() => fileRef.current?.click()}>Chọn ảnh</button>
+              <button className="ep-btn-sm ep-btn-sm--red" onClick={() => setAvatarPreview(null)}>Xóa</button>
             </div>
             <div className="ep-locked-fields">
               <div className="ep-field">
                 <label>Tên đăng nhập</label>
                 <div className="ep-input ep-input--locked">
-                  <span>
-                    {profileUser?.ten_tai_khoan || user?.email?.split("@")[0]}
-                  </span>
+                  <span>{profileUser?.ten_tai_khoan || user?.email?.split("@")[0] || "user"}</span>
                   <span className="ep-lock-badge">khóa</span>
                 </div>
               </div>
               <div className="ep-field">
                 <label>Email</label>
                 <div className="ep-input ep-input--locked">
-                  <span>{user?.email}</span>
+                  <span>{profileUser?.email || user?.email || "---"}</span>
                   <span className="ep-lock-badge">khóa</span>
                 </div>
               </div>
@@ -724,13 +489,11 @@ function EditProfileModal({
 
           <div className="ep-divider" />
           <div className="ep-section-title">
-            <span className="ep-section-title__bar" />
-            THÔNG TIN CÁ NHÂN
+            <span className="ep-section-title__bar" />THÔNG TIN CÁ NHÂN
           </div>
+
           <div className="ep-field">
-            <label>
-              Họ và tên <span className="ep-required">*</span>
-            </label>
+            <label>Họ và tên <span className="ep-required">*</span></label>
             <input
               className="ep-input ep-input--text"
               name="ho_ten"
@@ -740,127 +503,34 @@ function EditProfileModal({
             />
           </div>
 
+          {/* ← TRƯỜNG ĐỊA CHỈ NGƯỜI DÙNG */}
+          <div className="ep-field">
+            <label>Địa chỉ</label>
+            <input
+              className="ep-input ep-input--text"
+              name="dia_chi_user"
+              value={form.dia_chi_user}
+              onChange={handleChange}
+              placeholder="123 Nguyễn Văn Linh, Đà Nẵng"
+            />
+          </div>
+
           {isOrganization && (
             <>
               <div className="ep-divider" />
               <div className="ep-section-title">
-                <span className="ep-section-title__bar" />
-                TỔ CHỨC
-                <div className="ep-logo-btns">
-                  <button className="ep-btn-sm ep-btn-sm--outline">LOGO</button>
-                  <button className="ep-btn-sm ep-btn-sm--green">Đổi</button>
-                  <button className="ep-btn-sm ep-btn-sm--red">Xóa</button>
-                </div>
+                <span className="ep-section-title__bar" />TỔ CHỨC
               </div>
-
               <div className="ep-field">
-                <label>Loại hình tổ chức</label>
+                <label>Tên tổ chức</label>
                 <div className="ep-input ep-input--locked">
-                  <span>
-                    {(() => {
-                      const lh = toChuc?.loai_hinh;
-                      const map = {
-                        TO_CHUC_NHA_NUOC: {
-                          label: "Tổ chức nhà nước",
-                          color: "#1890ff",
-                          icon: (
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="#1890ff"
-                              strokeWidth="2"
-                            >
-                              <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3m4-14h1m4 0h1m-6 4h1m4 0h1m-5 10v-5h4v5" />
-                            </svg>
-                          ),
-                        },
-                        QUY_TU_THIEN: {
-                          label: "Quỹ từ thiện",
-                          color: "#52c41a",
-                          icon: (
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="#52c41a"
-                              strokeWidth="2"
-                            >
-                              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                            </svg>
-                          ),
-                        },
-                        DOANH_NGHIEP: {
-                          label: "Doanh nghiệp",
-                          color: "#fa8c16",
-                          icon: (
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="#fa8c16"
-                              strokeWidth="2"
-                            >
-                              <rect x="2" y="7" width="20" height="14" rx="2" />
-                              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
-                            </svg>
-                          ),
-                        },
-                      };
-                      const info = map[lh] || map.QUY_TU_THIEN;
-                      return (
-                        <span
-                          className="ep-lh-badge"
-                          style={{
-                            background: `${info.color}15`,
-                            color: info.color,
-                            border: `1px solid ${info.color}30`,
-                          }}
-                        >
-                          {info.icon} {info.label}
-                        </span>
-                      );
-                    })()}
-                  </span>
+                  <span>{toChuc?.ten_to_chuc || "Tên tổ chức"}</span>
                   <span className="ep-lock-badge">khóa</span>
                 </div>
               </div>
-
-              <div className="ep-field">
-                <label>
-                  Tên tổ chức <span className="ep-required">*</span>
-                </label>
-                <div className="ep-input ep-input--locked">
-                  <span>{form.ten_to_chuc || "Tên tổ chức"}</span>
-                  <span className="ep-lock-badge">khóa</span>
-                </div>
-              </div>
-
               <div className="ep-grid-2">
                 <div className="ep-field">
-                  <label>Mã số thuế</label>
-                  <div className="ep-input ep-input--locked">
-                    <span>{toChuc?.ma_so_thue || "—"}</span>
-                    <span className="ep-lock-badge">khóa</span>
-                  </div>
-                </div>
-                <div className="ep-field">
-                  <label>Người đại diện</label>
-                  <div className="ep-input ep-input--locked">
-                    <span>{toChuc?.nguoi_dai_dien || "—"}</span>
-                    <span className="ep-lock-badge">khóa</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ep-grid-2">
-                <div className="ep-field">
-                  <label>
-                    Số điện thoại <span className="ep-required">*</span>
-                  </label>
+                  <label>Số điện thoại</label>
                   <input
                     className="ep-input ep-input--text"
                     name="so_dien_thoai"
@@ -870,9 +540,7 @@ function EditProfileModal({
                   />
                 </div>
                 <div className="ep-field">
-                  <label>
-                    Địa chỉ <span className="ep-required">*</span>
-                  </label>
+                  <label>Địa chỉ tổ chức</label>
                   <input
                     className="ep-input ep-input--text"
                     name="dia_chi"
@@ -882,7 +550,6 @@ function EditProfileModal({
                   />
                 </div>
               </div>
-
               <div className="ep-field">
                 <label>Email tổ chức</label>
                 <input
@@ -908,17 +575,8 @@ function EditProfileModal({
           )}
         </div>
         <div className="ep-modal__footer">
-          <button
-            className="ep-footer-btn ep-footer-btn--cancel"
-            onClick={onClose}
-          >
-            Hủy
-          </button>
-          <button
-            className="ep-footer-btn ep-footer-btn--save"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
+          <button className="ep-footer-btn ep-footer-btn--cancel" onClick={onClose}>Hủy</button>
+          <button className="ep-footer-btn ep-footer-btn--save" onClick={handleSubmit} disabled={loading}>
             {loading ? "Đang lưu..." : "Lưu thay đổi"}
           </button>
         </div>
@@ -927,108 +585,81 @@ function EditProfileModal({
   );
 }
 
-// ── Change Password Modal ─────────────────────────────────────────────
-function ChangePasswordModal({ onClose }) {
+function ChangePasswordModal({ profileUser, onChangePassword, onClose }) {
+  const isGoogleUser = !!profileUser?.google_id;
   const [form, setForm] = useState({ old: "", new: "", confirm: "" });
   const [show, setShow] = useState({ old: false, new: false, confirm: false });
   const [loading, setLoading] = useState(false);
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const toggleShow = (field) => setShow({ ...show, [field]: !show[field] });
-  const handleSubmit = () => {
-    if (!form.old || !form.new || !form.confirm) {
-      alert("Vui lòng điền đầy đủ!");
-      return;
+
+  const handleSubmit = async () => {
+    if (!isGoogleUser && !form.old) {
+      notification.warning({ message: "Vui lòng điền đầy đủ!", placement: "topRight" }); return;
+    }
+    if (!form.new || !form.confirm) {
+      notification.warning({ message: "Vui lòng điền đầy đủ!", placement: "topRight" }); return;
     }
     if (form.new !== form.confirm) {
-      alert("Mật khẩu mới không khớp!");
-      return;
+      notification.warning({ message: "Mật khẩu mới không khớp!", placement: "topRight" }); return;
+    }
+    if (form.new.length < 6) {
+      notification.warning({ message: "Mật khẩu phải có ít nhất 6 ký tự!", placement: "topRight" }); return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      alert("Đổi mật khẩu thành công!");
+    const payload = isGoogleUser
+      ? { new_password: form.new, new_password_confirmation: form.confirm }
+      : { current_password: form.old, new_password: form.new, new_password_confirmation: form.confirm };
+    const { ok, err } = await onChangePassword(payload);
+    setLoading(false);
+    if (ok) {
+      notification.success({ message: isGoogleUser ? "Tạo mật khẩu thành công!" : "Đổi mật khẩu thành công!", placement: "topRight" });
       onClose();
-    }, 800);
+    } else {
+      notification.error({ message: err?.response?.data?.message || "Thất bại!", placement: "topRight" });
+    }
   };
+
   const EyeIcon = () => (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
     </svg>
   );
   const EyeOffIcon = () => (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
       <line x1="1" y1="1" x2="23" y2="23" />
     </svg>
   );
 
+  const themeColor = isGoogleUser ? "#f59e0b" : "#E24B4A";
+  const themeBgLight = isGoogleUser ? "#fef3c7" : "#fff0f0";
+  const fields = isGoogleUser
+    ? [{ label: "Mật khẩu mới", name: "new" }, { label: "Xác nhận mật khẩu", name: "confirm" }]
+    : [{ label: "Mật khẩu hiện tại", name: "old" }, { label: "Mật khẩu mới", name: "new" }, { label: "Xác nhận mật khẩu", name: "confirm" }];
+
   return (
-    <div
-      className="ep-overlay"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
+    <div className="ep-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="ep-modal" style={{ maxWidth: 420 }}>
-        <div className="ep-modal__header" style={{ background: "#E24B4A" }}>
-          <span>Đổi mật khẩu</span>
-          <button className="ep-modal__close" onClick={onClose}>
-            ✕
-          </button>
+        <div className="ep-modal__header" style={{ background: themeColor }}>
+          <span>{isGoogleUser ? "Tạo mật khẩu" : "Đổi mật khẩu"}</span>
+          <button className="ep-modal__close" onClick={onClose}>✕</button>
         </div>
         <div className="ep-modal__body">
           <div style={{ textAlign: "center", padding: "8px 0 4px" }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
-                background: "#fff0f0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 10px",
-              }}
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#E24B4A"
-                strokeWidth="2"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: themeBgLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
             <p style={{ fontSize: 13, color: "#888", margin: 0 }}>
-              Nhập mật khẩu cũ và mật khẩu mới để thay đổi
+              {isGoogleUser ? "Bạn đăng nhập bằng Google" : "Nhập mật khẩu cũ và mật khẩu mới để thay đổi"}
             </p>
           </div>
-          {[
-            { label: "Mật khẩu cũ", name: "old" },
-            { label: "Mật khẩu mới", name: "new" },
-            { label: "Xác nhận mật khẩu", name: "confirm" },
-          ].map((f) => (
+          {fields.map((f) => (
             <div key={f.name} className="ep-field" style={{ width: "100%" }}>
-              <label>
-                {f.label} <span className="ep-required">*</span>
-              </label>
+              <label>{f.label} <span className="ep-required">*</span></label>
               <div style={{ position: "relative" }}>
                 <input
                   className="ep-input ep-input--text"
@@ -1037,29 +668,10 @@ function ChangePasswordModal({ onClose }) {
                   value={form[f.name]}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  style={{
-                    paddingRight: 40,
-                    background: "#fff",
-                    color: "#1a1a1a",
-                  }}
+                  style={{ paddingRight: 40 }}
                 />
-                <button
-                  type="button"
-                  onClick={() => toggleShow(f.name)}
-                  style={{
-                    position: "absolute",
-                    right: 10,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#aaa",
-                    padding: 0,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
+                <button type="button" onClick={() => toggleShow(f.name)}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 0, display: "flex", alignItems: "center" }}>
                   {show[f.name] ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
@@ -1067,19 +679,9 @@ function ChangePasswordModal({ onClose }) {
           ))}
         </div>
         <div className="ep-modal__footer">
-          <button
-            className="ep-footer-btn ep-footer-btn--cancel"
-            onClick={onClose}
-          >
-            Hủy
-          </button>
-          <button
-            className="ep-footer-btn"
-            style={{ background: "#E24B4A", color: "#fff" }}
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? "Đang xử lý..." : "Đổi mật khẩu"}
+          <button className="ep-footer-btn ep-footer-btn--cancel" onClick={onClose}>Hủy</button>
+          <button className="ep-footer-btn" style={{ background: themeColor, color: "#fff" }} onClick={handleSubmit} disabled={loading}>
+            {loading ? "Đang xử lý..." : (isGoogleUser ? "Tạo mật khẩu" : "Đổi mật khẩu")}
           </button>
         </div>
       </div>

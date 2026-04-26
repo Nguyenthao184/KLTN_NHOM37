@@ -55,3 +55,8 @@ export const getUserPosts = async (id) => {
   const res = await api.get(`/posts`, { params: { nguoi_dung_id: id, per_page: 20 } });
   return res.data;
 };
+// GET /organization/:id — lấy chi tiết tổ chức (có tong_thu, tong_chi)
+export const getOrganizationDetail = async (id) => {
+  const res = await api.get(`/organization/${id}`);
+  return res.data;
+};

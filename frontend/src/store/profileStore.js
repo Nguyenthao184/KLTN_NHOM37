@@ -31,27 +31,44 @@ const useProfileStore = create((set, get) => ({
   isFetchedPosts: false,
   isFetchedCampaigns: false,
 
-  // ===== FETCH PROFILE — GET /user/profile =====
-  fetchProfile: async (force = false) => {
-    if (!force && get().isFetchedProfile) return;
-    if (profilePromise) return profilePromise;
-    set({ loadingProfile: true });
-    profilePromise = (async () => {
-      try {
-        const data = await getProfile();
-        set({ profile: data, loadingProfile: false, isFetchedProfile: true });
-        return data;
-      } catch (err) {
-        console.error("Lỗi fetch profile:", err);
-        set({ loadingProfile: false });
-      } finally {
-        profilePromise = null;
+  // ===== FETCH PROFILE =====
+ fetchProfile: async (force = false) => {
+  if (!force && get().isFetchedProfile) return;
+  if (profilePromise) return profilePromise;
+  set({ loadingProfile: true });
+  profilePromise = (async () => {
+    try {
+      const data = await getProfile();
+      
+      // Nếu là tổ chức, fetch thêm tong_thu, tong_chi từ /organization/:id
+      const toChuc = data?.user?.to_chuc;
+      if (toChuc?.id) {
+        try {
+          const { getOrganizationDetail } = await import("../api/profileService");
+          const orgDetail = await getOrganizationDetail(toChuc.id);
+          // Merge tong_thu, tong_chi vào tai_khoan_gay_quy
+          if (data.user.to_chuc.tai_khoan_gay_quy) {
+            data.user.to_chuc.tai_khoan_gay_quy.tong_thu = orgDetail.tong_thu;
+            data.user.to_chuc.tai_khoan_gay_quy.tong_chi = orgDetail.tong_chi;
+          }
+        } catch (err) {
+          console.error("Lỗi fetch org detail:", err);
+        }
       }
-    })();
-    return profilePromise;
-  },
+      
+      set({ profile: data, loadingProfile: false, isFetchedProfile: true });
+      return data;
+    } catch (err) {
+      console.error("Lỗi fetch profile:", err);
+      set({ loadingProfile: false });
+    } finally {
+      profilePromise = null;
+    }
+  })();
+  return profilePromise;
+},
 
-  // ===== FETCH DONATE HISTORY — GET /donate/history =====
+  // ===== FETCH DONATE HISTORY =====
   fetchDonations: async () => {
     if (get().isFetchedDonations) return;
     if (donatePromise) return donatePromise;
@@ -70,7 +87,7 @@ const useProfileStore = create((set, get) => ({
     return donatePromise;
   },
 
-  // ===== FETCH MY POSTS — GET /posts/me =====
+  // ===== FETCH MY POSTS =====
   fetchMyPosts: async (userId) => {
     if (get().isFetchedPosts) return;
     if (postsPromise) return postsPromise;
@@ -80,9 +97,8 @@ const useProfileStore = create((set, get) => ({
         let posts = [];
         try {
           const data = await getMyPosts();
-          posts = data?.data || data || [];
+          posts = data?.data?.data || data?.data || data || [];
         } catch {
-          // fallback filter theo userId
           const res = await axiosClient.get("/posts");
           const all = res.data?.data?.data || res.data?.data || [];
           posts = userId ? all.filter((p) => p.nguoi_dung_id === userId) : all;
@@ -98,19 +114,25 @@ const useProfileStore = create((set, get) => ({
     return postsPromise;
   },
 
-  // ===== FETCH MY CAMPAIGNS — GET /campaigns/me (chỉ tổ chức) =====
-  fetchMyCampaigns: async () => {
-    if (get().isFetchedCampaigns) return;
+  // ===== FETCH MY CAMPAIGNS =====
+  fetchMyCampaigns: async (force = false) => {
+    if (!force && get().isFetchedCampaigns) return;
     if (campaignsPromise) return campaignsPromise;
     set({ loadingCampaigns: true });
     campaignsPromise = (async () => {
       try {
-        const data = await getMyCampaigns();
-        const list = data?.data || data || [];
-        set({ myCampaigns: Array.isArray(list) ? list : [], loadingCampaigns: false, isFetchedCampaigns: true });
+        const res = await getMyCampaigns();
+        console.log("campaigns raw:", res);
+        // BE trả về paginate: { current_page, data: [...], total }
+        const list = res?.data || [];
+        console.log("campaigns list:", list, "isArray:", Array.isArray(list));
+        set({
+          myCampaigns: Array.isArray(list) ? list : [],
+          loadingCampaigns: false,
+          isFetchedCampaigns: true,
+        });
       } catch (err) {
-        // Nếu không phải tổ chức (403) thì bỏ qua
-        console.error("Lỗi fetch my campaigns:", err);
+        console.error("Lỗi fetch campaigns:", err);
         set({ myCampaigns: [], loadingCampaigns: false, isFetchedCampaigns: true });
       } finally {
         campaignsPromise = null;
@@ -119,7 +141,7 @@ const useProfileStore = create((set, get) => ({
     return campaignsPromise;
   },
 
-  // ===== UPDATE PROFILE — POST /user/profile =====
+  // ===== UPDATE PROFILE =====
   handleUpdateProfile: async (formData) => {
     try {
       const data = await updateProfile(formData);
@@ -132,7 +154,7 @@ const useProfileStore = create((set, get) => ({
     }
   },
 
-  // ===== CHANGE PASSWORD — POST /user/change-password =====
+  // ===== CHANGE PASSWORD =====
   handleChangePassword: async (payload) => {
     try {
       const data = await changePassword(payload);
@@ -143,7 +165,7 @@ const useProfileStore = create((set, get) => ({
     }
   },
 
-  // ===== UPDATE DIA CHI — POST /user/update-diachi =====
+  // ===== UPDATE DIA CHI =====
   handleUpdateDiaChi: async (dia_chi) => {
     try {
       const data = await updateDiaChi(dia_chi);

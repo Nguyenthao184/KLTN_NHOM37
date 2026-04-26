@@ -4,11 +4,6 @@ import useAuthStore from "../store/authStore";
 
 const useProfile = () => {
   const { user } = useAuthStore();
-  const storeRoles = useAuthStore((s) => s.roles);
-
-  const isOrganization = Array.isArray(storeRoles)
-    ? storeRoles.some((r) => r === "TO_CHUC" || r?.ten === "TO_CHUC" || r?.ten_vai_tro === "TO_CHUC")
-    : false;
 
   const {
     profile,
@@ -32,11 +27,8 @@ const useProfile = () => {
     fetchProfile();
     fetchDonations();
     fetchMyPosts(user?.id);
-    // Chỉ fetch campaigns nếu là tổ chức
-    if (isOrganization) {
-      fetchMyCampaigns();
-    }
-  }, [user?.id, isOrganization]);
+    fetchMyCampaigns(true);
+  }, [user?.id]);
 
   return {
     profile,

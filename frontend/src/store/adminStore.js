@@ -16,7 +16,13 @@ let fraudPromise = null;
 let dashboardPromise = null;
 let reportsPromise = null;
 
+const DEFAULT_META = { current_page: 1, per_page: 10, total: 0, last_page: 1 };
+
+// Helper: lấy total từ nhiều shape response khác nhau (BE Laravel paginate vs custom meta)
+const getTotal = (res) => res?.meta?.total ?? res?.total ?? res?.data?.total ?? 0;
+
 const useAdminStore = create((set, get) => ({
+  // ===== STATE =====
   users: [],
   posts: [],
   campaigns: [],
@@ -27,6 +33,21 @@ const useAdminStore = create((set, get) => ({
   dashboardFundraising: null,
   dashboardActivities: [],
 
+  // Pagination meta cho từng list
+  usersMeta:     { ...DEFAULT_META },
+  postsMeta:     { ...DEFAULT_META },
+  campaignsMeta: { ...DEFAULT_META },
+
+  // Summary tổng thể (không phụ thuộc page hiện tại)
+  usersSummary:     { total: 0, user: 0, org: 0, blocked: 0 },
+  postsSummary:     { total: 0, cho: 0, nhan: 0, vi_pham: 0 },
+  campaignsSummary: { total: 0, pending: 0, active: 0, completed: 0 },
+
+  // Filter state cho từng list
+  usersParams:     { page: 1, per_page: 10, search: "", role: "", status: "" },
+  postsParams:     { page: 1, per_page: 10, search: "", loai_bai: "" },
+  campaignsParams: { page: 1, per_page: 10, keyword: "", trang_thai: "" },
+
   loadingUsers: false,
   loadingPosts: false,
   loadingCampaigns: false,
@@ -34,22 +55,24 @@ const useAdminStore = create((set, get) => ({
   loadingDashboard: false,
   loadingReports: false,
 
-  isFetchedUsers: false,
-  isFetchedPosts: false,
-  isFetchedCampaigns: false,
   isFetchedFraud: false,
   isFetchedDashboard: false,
   isFetchedReports: false,
 
   // ===== USERS =====
-  fetchUsers: async () => {
-    if (get().isFetchedUsers) return;
+  fetchUsers: async (params = {}) => {
     if (usersPromise) return usersPromise;
-    set({ loadingUsers: true });
+    const merged = { ...get().usersParams, ...params };
+    const cleaned = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== "" && v !== null && v !== undefined));
+    set({ loadingUsers: true, usersParams: merged });
     usersPromise = (async () => {
       try {
-        const res = await getAdminUsers();
-        set({ users: res.data || [], loadingUsers: false, isFetchedUsers: true });
+        const res = await getAdminUsers(cleaned);
+        set({
+          users: res.data || [],
+          usersMeta: res.meta || { ...DEFAULT_META },
+          loadingUsers: false,
+        });
       } catch (err) {
         console.error("Lỗi fetch users:", err);
         set({ loadingUsers: false });
@@ -58,10 +81,30 @@ const useAdminStore = create((set, get) => ({
     return usersPromise;
   },
 
+  fetchUsersSummary: async () => {
+    try {
+      const [allRes, userRes, orgRes, blockedRes] = await Promise.all([
+        getAdminUsers({ per_page: 1 }),
+        getAdminUsers({ per_page: 1, role: "NGUOI_DUNG" }),
+        getAdminUsers({ per_page: 1, role: "TO_CHUC" }),
+        getAdminUsers({ per_page: 1, status: "BI_CAM" }),
+      ]);
+      set({
+        usersSummary: {
+          total:   getTotal(allRes),
+          user:    getTotal(userRes),
+          org:     getTotal(orgRes),
+          blocked: getTotal(blockedRes),
+        },
+      });
+    } catch (err) { console.error("Lỗi fetch users summary:", err); }
+  },
+
   handleLockUser: async (id) => {
     try {
       await lockUser(id);
       set({ users: get().users.map(u => u.id === id ? { ...u, status: "BI_CAM", status_label: "Đã khóa" } : u) });
+      get().fetchUsersSummary();
       return true;
     } catch (err) { console.error(err); return false; }
   },
@@ -70,19 +113,28 @@ const useAdminStore = create((set, get) => ({
     try {
       await unlockUser(id);
       set({ users: get().users.map(u => u.id === id ? { ...u, status: "HOAT_DONG", status_label: "Hoạt động" } : u) });
+      get().fetchUsersSummary();
       return true;
     } catch (err) { console.error(err); return false; }
   },
 
   // ===== POSTS =====
-  fetchPosts: async () => {
-    if (get().isFetchedPosts) return;
+  fetchPosts: async (params = {}) => {
     if (postsPromise) return postsPromise;
-    set({ loadingPosts: true });
+    const merged = { ...get().postsParams, ...params };
+    const cleaned = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== "" && v !== null && v !== undefined));
+    set({ loadingPosts: true, postsParams: merged });
     postsPromise = (async () => {
       try {
-        const res = await getAdminPosts();
-        set({ posts: res.data?.data || res.data || [], loadingPosts: false, isFetchedPosts: true });
+        const res = await getAdminPosts(cleaned);
+        const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        const meta = res.meta || (res.data?.current_page ? {
+          current_page: res.data.current_page,
+          per_page:     res.data.per_page,
+          total:        res.data.total,
+          last_page:    res.data.last_page,
+        } : { ...DEFAULT_META });
+        set({ posts: list, postsMeta: meta, loadingPosts: false });
       } catch (err) {
         console.error(err);
         set({ loadingPosts: false });
@@ -91,7 +143,27 @@ const useAdminStore = create((set, get) => ({
     return postsPromise;
   },
 
-  // ===== POST REPORTS — GET /admin/post-reports =====
+  fetchPostsSummary: async () => {
+    try {
+      const [allRes, choRes, nhanRes, reportsRes] = await Promise.all([
+        getAdminPosts({ per_page: 1 }),
+        getAdminPosts({ per_page: 1, loai_bai: "CHO" }),
+        getAdminPosts({ per_page: 1, loai_bai: "NHAN" }),
+        getAdminPostReports({ trang_thai: "CHO_XU_LY", limit: 100 }),
+      ]);
+      const reports = Array.isArray(reportsRes.data) ? reportsRes.data : (reportsRes.data?.data || []);
+      set({
+        postsSummary: {
+          total:   getTotal(allRes),
+          cho:     getTotal(choRes),
+          nhan:    getTotal(nhanRes),
+          vi_pham: reports.length,
+        },
+      });
+    } catch (err) { console.error("Lỗi fetch posts summary:", err); }
+  },
+
+  // ===== POST REPORTS =====
   fetchPostReports: async (force = false) => {
     if (!force && get().isFetchedReports) return;
     if (reportsPromise) return reportsPromise;
@@ -108,25 +180,33 @@ const useAdminStore = create((set, get) => ({
     return reportsPromise;
   },
 
-  // POST /admin/post-reports/{id} — trang_thai: DA_XU_LY | TU_CHOI
   handleUpdatePostReport: async (id, trang_thai) => {
     try {
       await updateAdminPostReport(id, trang_thai);
       set({ isFetchedReports: false });
       await get().fetchPostReports(true);
+      get().fetchPostsSummary();
       return true;
     } catch (err) { console.error(err); return false; }
   },
 
   // ===== CAMPAIGNS =====
-  fetchCampaigns: async () => {
-    if (get().isFetchedCampaigns) return;
+  fetchCampaigns: async (params = {}) => {
     if (campaignsPromise) return campaignsPromise;
-    set({ loadingCampaigns: true });
+    const merged = { ...get().campaignsParams, ...params };
+    const cleaned = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== "" && v !== null && v !== undefined));
+    set({ loadingCampaigns: true, campaignsParams: merged });
     campaignsPromise = (async () => {
       try {
-        const res = await getAdminCampaigns();
-        set({ campaigns: res.data || [], loadingCampaigns: false, isFetchedCampaigns: true });
+        const res = await getAdminCampaigns(cleaned);
+        const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        const meta = res.meta || (res.current_page ? {
+          current_page: res.current_page,
+          per_page:     res.per_page,
+          total:        res.total,
+          last_page:    res.last_page,
+        } : { ...DEFAULT_META });
+        set({ campaigns: list, campaignsMeta: meta, loadingCampaigns: false });
       } catch (err) {
         console.error(err);
         set({ loadingCampaigns: false });
@@ -135,10 +215,30 @@ const useAdminStore = create((set, get) => ({
     return campaignsPromise;
   },
 
+  fetchCampaignsSummary: async () => {
+    try {
+      const [allRes, pendingRes, activeRes, completedRes] = await Promise.all([
+        getAdminCampaigns({ per_page: 1 }),
+        getAdminCampaigns({ per_page: 1, trang_thai: "CHO_XU_LY" }),
+        getAdminCampaigns({ per_page: 1, trang_thai: "HOAT_DONG" }),
+        getAdminCampaigns({ per_page: 1, trang_thai: "HOAN_THANH" }),
+      ]);
+      set({
+        campaignsSummary: {
+          total:     getTotal(allRes),
+          pending:   getTotal(pendingRes),
+          active:    getTotal(activeRes),
+          completed: getTotal(completedRes),
+        },
+      });
+    } catch (err) { console.error("Lỗi fetch campaigns summary:", err); }
+  },
+
   handleApproveCampaign: async (id) => {
     try {
       await approveCampaign(id);
       set({ campaigns: get().campaigns.map(c => c.id === id ? { ...c, trang_thai: "HOAT_DONG" } : c) });
+      get().fetchCampaignsSummary();
       return true;
     } catch (err) { console.error(err); return false; }
   },
@@ -147,17 +247,17 @@ const useAdminStore = create((set, get) => ({
     try {
       await rejectCampaign(id);
       set({ campaigns: get().campaigns.map(c => c.id === id ? { ...c, trang_thai: "TU_CHOI" } : c) });
+      get().fetchCampaignsSummary();
       return true;
     } catch (err) { console.error(err); return false; }
   },
 
   // ===== ORGANIZATIONS =====
-  // BE yêu cầu ly_do khi reject
   handleApproveOrg: async (id) => {
     try {
       await approveOrganization(id);
-      set({ isFetchedUsers: false });
       await get().fetchUsers();
+      get().fetchUsersSummary();
       return true;
     } catch (err) { console.error(err); return false; }
   },
@@ -165,8 +265,8 @@ const useAdminStore = create((set, get) => ({
   handleRejectOrg: async (id, ly_do = "Không đủ điều kiện") => {
     try {
       await rejectOrganization(id, ly_do);
-      set({ isFetchedUsers: false });
       await get().fetchUsers();
+      get().fetchUsersSummary();
       return true;
     } catch (err) { console.error(err); return false; }
   },

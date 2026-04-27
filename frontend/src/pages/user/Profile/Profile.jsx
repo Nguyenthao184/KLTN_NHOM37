@@ -108,9 +108,8 @@ export default function ProfilePage() {
     user: {
       id: item.nguoi_dung_id,
       name: item.nguoi_dung_ten,
-      avatar: item.avatar_url
-        ? item.avatar_url
-        : (item.nguoi_dung_ten?.[0] || "U").toUpperCase(),
+      avatar: (item.nguoi_dung_ten?.[0] || "U").toUpperCase(),
+      anh_dai_dien: item.avatar_url ?? null,
       color: "rgb(24, 144, 255)",
     },
     location: item.dia_diem,

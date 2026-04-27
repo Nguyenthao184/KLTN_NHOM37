@@ -66,9 +66,9 @@ export default function PostCard({ post, style, onDelete }) {
   const openChatWith = useChatStore((s) => s.openChatWith);
 
   const postState = usePostStore((s) => s.posts.find((p) => p.id === post?.id));
-  const liked = postState?.liked;
-  const likeCount = postState?.so_luot_thich ?? 0;
-  const cmtCount = postState?.so_binh_luan ?? 0;
+  const liked = postState?.liked ?? post.liked ?? false;
+  const likeCount = postState?.so_luot_thich ?? post.likeCount ?? 0;
+  const cmtCount = postState?.so_binh_luan ?? post.commentCount ?? 0;
 
   const { updatePost, deletePost: deletePostStore } = usePostStore();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -392,28 +392,43 @@ export default function PostCard({ post, style, onDelete }) {
         {/* Header */}
         <div className="post-card__header">
           <div
-  className="post-card__avatar"
-  style={{ background: post.user.color, cursor: "pointer" }}
-  onClick={(e) => {
-    e.stopPropagation();
-    const uid = post.nguoi_dung_id ?? post.user?.id;
-    if (uid) navigate(`/bang-tin/nguoi-dung/${uid}`);
-  }}
->
-  {post.user.avatar}
-</div>
-<div className="post-card__user-info">
-  <div
-    className="post-card__username"
-    style={{ cursor: "pointer" }}
-    onClick={(e) => {
-      e.stopPropagation();
-      const uid = post.nguoi_dung_id ?? post.user?.id;
-      if (uid) navigate(`/bang-tin/nguoi-dung/${uid}`);
-    }}
-  >
-    {post.user.name}
-  </div>
+            className="post-card__avatar"
+            style={{ background: post.user.color, cursor: "pointer" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const uid = post.nguoi_dung_id ?? post.user?.id;
+              if (uid) navigate(`/bang-tin/nguoi-dung/${uid}`);
+            }}
+          >
+            {post.user.anh_dai_dien ? (
+              <img
+                src={post.user.anh_dai_dien}
+                alt=""
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                }}
+              />
+            ) : (
+              <span style={{ color: "#fff", fontWeight: 600, fontSize: 16 }}>
+                {post.user.avatar}
+              </span>
+            )}
+          </div>
+          <div className="post-card__user-info">
+            <div
+              className="post-card__username"
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const uid = post.nguoi_dung_id ?? post.user?.id;
+                if (uid) navigate(`/bang-tin/nguoi-dung/${uid}`);
+              }}
+            >
+              {post.user.name}
+            </div>
             <div className="post-card__meta">
               <span className="post-card__location">
                 <FiMapPin size={11} /> {post.location}
@@ -491,9 +506,6 @@ export default function PostCard({ post, style, onDelete }) {
           >
             {post.desc}
           </div>
-          <button className="post-card__see-more" onClick={handleToggleDesc}>
-            {expanded ? "Thu gọn" : "Xem thêm"}
-          </button>
 
           {imgCount > 0 && (
             <div
@@ -776,7 +788,24 @@ export default function PostCard({ post, style, onDelete }) {
                 className="edit-modal__author-avatar"
                 style={{ background: post.user.color }}
               >
-                {post.user.avatar}
+                {post.user.anh_dai_dien ? (
+                  <img
+                    src={post.user.anh_dai_dien}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "50%",
+                    }}
+                  />
+                ) : (
+                  <span
+                    style={{ color: "#fff", fontWeight: 600, fontSize: 16 }}
+                  >
+                    {post.user.avatar}
+                  </span>
+                )}
               </div>
               <div className="edit-modal__author-info">
                 <div className="edit-modal__author-name">{post.user.name}</div>

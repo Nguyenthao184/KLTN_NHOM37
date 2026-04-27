@@ -172,35 +172,23 @@ export default function UserProfile() {
                 <p>Chưa có bài đăng nào</p>
               </div>
             ) : (
-              userPosts.map((item, index) => (
+              userPosts.map((item) => (
                 <PostCard
                   key={item.id}
                   post={{
                     id: item.id,
-                    nguoi_dung_id: item.nguoi_dung?.id,
+                    nguoi_dung_id: nguoiDung?.id,
                     loai_bai: item.loai_bai,
                     user: {
-                      id: item.nguoi_dung?.id,
-                      name: item.nguoi_dung?.ho_ten,
-                      avatar: item.nguoi_dung?.anh_dai_dien ? (
-                        <img
-                          src={item.nguoi_dung.anh_dai_dien}
-                          alt=""
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            borderRadius: "50%",
-                          }}
-                        />
-                      ) : (
-                        item.nguoi_dung?.ho_ten?.[0]?.toUpperCase()
-                      ),
+                      id: nguoiDung?.id,
+                      name: item.nguoi_dung_ten,
+                      avatar: item.nguoi_dung_ten?.[0]?.toUpperCase(),
+                      anh_dai_dien: avatarUrl ?? null,
                       color: "rgb(24, 144, 255)",
                     },
                     title: item.tieu_de,
                     desc: item.mo_ta,
-                    likeCount: item.so_luot_thich || 0,
+                    likeCount: item.so_luot_thich || 0, // ✅ giữ nguyên để fallback
                     commentCount: item.so_binh_luan || 0,
                     location: item.dia_diem,
                     time: item.ngay_dang,

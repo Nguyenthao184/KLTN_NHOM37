@@ -31,6 +31,7 @@ import Register from "../pages/auth/Register/Register.jsx";
 import ForgotPassword from "../pages/auth/ForgotPassword/Forgot.jsx";
 import UserProfile from "../pages/guest/UserProfile/UserProfile.jsx";
 import OrgDashboard from "../pages/organization/Dashboard/OrgDashboard.jsx";
+import CampaignMap from "../pages/guest/CampaignMap/CampaignMap.jsx";
 
 // ================== PUBLIC ROUTES ==================
 const publicRoutes = [
@@ -64,6 +65,7 @@ const publicRoutes = [
     element: (<PublicRoute><MainLayout><OrganizationDetail /></MainLayout></PublicRoute>),
   },
   { path: "/thanh-cong", element: (<PublicRoute><DonateSuccess /></PublicRoute>) },
+  { path: "/ban-do-cd", element: (<PublicRoute><CampaignMap /></PublicRoute>) },
 ];
 
 // ================== PRIVATE ROUTES ==================

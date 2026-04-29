@@ -200,7 +200,7 @@ export default function ProfilePage() {
                 {isOrganization && toChuc?.ten_to_chuc && (
                   <p className="profile-info__org">{toChuc.ten_to_chuc}</p>
                 )}
-                {!isOrganization && profileUser?.dia_chi && (
+                {profileUser?.dia_chi && (
                   <p className="profile-info__address">
                     📍 {profileUser.dia_chi}
                   </p>

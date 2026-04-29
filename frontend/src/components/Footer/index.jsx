@@ -13,30 +13,30 @@ export default function Footer() {
 
           <div className="app-footer__col">
             <div className="app-footer__heading">Tổng Quan</div>
-            <a className="app-footer__link" href="#">
+            <a className="app-footer__link" href="/campaigns">
               Chiến dịch
             </a>
-            <a className="app-footer__link" href="#">
+            <a className="app-footer__link" href="/bang-tin">
               Bảng tin
             </a>
           </div>
 
           <div className="app-footer__col">
             <div className="app-footer__heading">Bản đồ chiến dịch</div>
-            <a className="app-footer__link" href="#">
+            <a className="app-footer__link" href="/map">
               Chiến dịch địa phương
             </a>
           </div>
 
           <div className="app-footer__col">
             <div className="app-footer__heading">Hỗ trợ</div>
-            <a className="app-footer__link" href="#">
+            <a className="app-footer__link" href="/ho-tro">
               Hỏi đáp
             </a>
-            <a className="app-footer__link" href="#">
+            <a className="app-footer__link" href="/dieu-khoan">
               Điều khoản
             </a>
-            <a className="app-footer__link" href="#">
+            <a className="app-footer__link" href="/chinh-sach-bao-mat">
               Chính sách bảo mật
             </a>
           </div>
@@ -51,14 +51,18 @@ export default function Footer() {
             <div className="app-footer__social">
               <a
                 className="app-footer__socialBtn"
-                href="#"
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Facebook"
               >
                 <FiFacebook size={22} />
               </a>
               <a
                 className="app-footer__socialBtn"
-                href="#"
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
               >
                 <FiInstagram size={22} />

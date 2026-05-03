@@ -16,6 +16,7 @@ const useProfile = () => {
     loadingCampaigns,
     postsHasMore,
     donationsHasMore,
+    campaignsHasMore,
     fetchProfile,
     fetchDonations,
     fetchMyPosts,
@@ -23,13 +24,17 @@ const useProfile = () => {
     handleUpdateProfile,
     handleChangePassword,
     handleUpdateDiaChi,
+    reset,
   } = useProfileStore();
 
   useEffect(() => {
+    // Reset store trước khi fetch để tránh hiện data cũ khi đổi tài khoản
+    reset();
+    if (!user?.id) return;
     fetchProfile();
     fetchDonations(false);
     fetchMyPosts(false);
-    fetchMyCampaigns(true);
+    fetchMyCampaigns(false);
   }, [user?.id]);
 
   return {
@@ -43,8 +48,10 @@ const useProfile = () => {
     loadingCampaigns,
     postsHasMore,
     donationsHasMore,
+    campaignsHasMore,
     loadMorePosts: () => fetchMyPosts(true),
     loadMoreDonations: () => fetchDonations(true),
+    loadMoreCampaigns: () => fetchMyCampaigns(true),
     handleUpdateProfile,
     handleChangePassword,
     handleUpdateDiaChi,

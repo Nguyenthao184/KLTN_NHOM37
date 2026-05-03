@@ -12,11 +12,12 @@ import SuspendModal from "../Projects/SuspendModal";
 import "./Posts.scss";
 
 const STATUS_MAP = {
-  CON_NHAN: { label: "Còn nhận", cls: "green" },
-  CON_TANG: { label: "Còn tặng", cls: "yellow" },
-  DA_NHAN:  { label: "Đã nhận",  cls: "blue" },
-  DA_TANG:  { label: "Đã tặng",  cls: "blue" },
-  HET_HAN:  { label: "Hết hạn",  cls: "red" },
+  CON_NHAN: { label: "Còn nhận",  cls: "green"  },
+  CON_TANG: { label: "Còn tặng",  cls: "yellow" },
+  DA_NHAN:  { label: "Đã nhận",   cls: "blue"   },
+  DA_TANG:  { label: "Đã tặng",   cls: "blue"   },
+  HET_HAN:  { label: "Hết hạn",   cls: "red"    },
+  TAM_DUNG: { label: "Tạm dừng",  cls: "yellow" },
 };
 
 export default function Posts() {

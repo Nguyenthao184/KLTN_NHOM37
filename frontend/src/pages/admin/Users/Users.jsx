@@ -438,11 +438,13 @@ export default function Users() {
           )}
         </div>
 
-        <Pagination
-          meta={usersMeta}
-          loading={loadingUsers}
-          onChange={(page) => fetchUsers({ page })}
-        />
+        {filter !== "pending" && (
+          <Pagination
+            meta={usersMeta}
+            loading={loadingUsers}
+            onChange={(page) => fetchUsers({ page })}
+          />
+        )}
       </div>
 
       {selected && (

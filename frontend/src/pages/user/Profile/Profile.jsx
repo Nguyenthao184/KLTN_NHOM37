@@ -36,6 +36,9 @@ export default function ProfilePage() {
     postsHasMore,
     loadMoreDonations,
     loadMorePosts,
+    loadingCampaigns,
+    campaignsHasMore,
+    loadMoreCampaigns,
     handleUpdateProfile,
     handleChangePassword,
   } = useProfile();
@@ -81,12 +84,15 @@ export default function ProfilePage() {
         if (activeTab === "history" && donationsHasMore && !loadingDonations) {
           loadMoreDonations();
         }
+        if (activeTab === "projects" && campaignsHasMore && !loadingCampaigns) {
+          loadMoreCampaigns();
+        }
       }
     };
     
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [activeTab, postsHasMore, loadingPosts, loadMorePosts, donationsHasMore, loadingDonations, loadMoreDonations]);
+  }, [activeTab, postsHasMore, loadingPosts, loadMorePosts, donationsHasMore, loadingDonations, loadMoreDonations, campaignsHasMore, loadingCampaigns, loadMoreCampaigns]);
 
   const handleEditCampaign = (campaign, e) => {
     e.stopPropagation();
@@ -1791,11 +1797,11 @@ function ChangePasswordModal({ profileUser, onChangePassword, onClose }) {
     }
     setLoading(true);
     const payload = isGoogleUser
-      ? { new_password: form.new, new_password_confirmation: form.confirm }
+      ? { new_password: form.new, confirm_password: form.confirm }
       : {
           current_password: form.old,
           new_password: form.new,
-          new_password_confirmation: form.confirm,
+          confirm_password: form.confirm,
         };
     const { ok, err } = await onChangePassword(payload);
     setLoading(false);

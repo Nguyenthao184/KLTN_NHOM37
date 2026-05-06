@@ -168,3 +168,23 @@ export const getViolationReasons = async () => {
   const res = await api.get("/admin/violation-reasons");
   return res.data;
 };
+
+// ===== WITHDRAW REQUESTS (Admin) =====
+// GET /admin/withdraw-requests?trang_thai=CHO_DUYET — danh sách yêu cầu rút
+export const getAdminWithdrawRequests = async (trang_thai) => {
+  const params = trang_thai ? { trang_thai } : {};
+  const res = await api.get("/admin/withdraw-requests", { params });
+  return res.data;
+};
+
+// PUT /admin/withdraw-requests/{id}/confirm — xác nhận giao dịch
+export const confirmWithdrawRequest = async (id, body) => {
+  const res = await api.put(`/admin/withdraw-requests/${id}/confirm`, body);
+  return res.data;
+};
+
+// PUT /admin/withdraw-requests/{id}/reject — từ chối yêu cầu
+export const rejectWithdrawRequest = async (id, body) => {
+  const res = await api.put(`/admin/withdraw-requests/${id}/reject`, body);
+  return res.data;
+};

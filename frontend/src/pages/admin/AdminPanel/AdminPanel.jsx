@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FiMenu, FiX, FiBell, FiSearch, FiLogOut,
-  FiChevronRight, FiGrid, FiUsers, FiFolder, FiFileText, FiHome,
+  FiChevronRight, FiGrid, FiUsers, FiFolder, FiFileText, FiHome, FiDollarSign,
 } from "react-icons/fi";
 import useAuthStore from "../../../store/authStore";
 import { logoutAPI } from "../../../api/authService";
@@ -10,6 +10,7 @@ import Dashboard from "../Dashboard/Dashboard";
 import Users from "../Users/Users";
 import Projects from "../Projects/Projects";
 import Posts from "../Posts/Posts";
+import Withdrawals from "../Withdrawals/Withdrawals";
 import "./AdminPanel.scss";
 
 const NAV_ITEMS = [
@@ -27,9 +28,15 @@ const NAV_ITEMS = [
       { key: "posts",    icon: <FiFileText size={20} />, label: "Bài đăng",   path: "/admin/posts" },
     ],
   },
+  {
+    section: "Tài chính",
+    items: [
+      { key: "withdrawals", icon: <FiDollarSign size={20} />, label: "Yêu cầu rút tiền", path: "/admin/withdrawals" },
+    ],
+  },
 ];
 
-const COMPONENTS = { dashboard: Dashboard, users: Users, projects: Projects, posts: Posts };
+const COMPONENTS = { dashboard: Dashboard, users: Users, projects: Projects, posts: Posts, withdrawals: Withdrawals };
 
 export default function AdminPanel() {
   const [sidebarOpen, setSidebarOpen]   = useState(false);

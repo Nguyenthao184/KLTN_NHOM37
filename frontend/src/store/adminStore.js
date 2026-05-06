@@ -18,6 +18,10 @@ let fraudPromise = null;
 let dashboardPromise = null;
 let reportsPromise = null;
 
+let usersRequestId = 0;
+let postsRequestId = 0;
+let campaignsRequestId = 0;
+
 const DEFAULT_META = { current_page: 1, per_page: 10, total: 0, last_page: 1 };
 
 // Helper: lấy total từ nhiều shape response khác nhau (BE Laravel paginate vs custom meta)
@@ -36,18 +40,18 @@ const useAdminStore = create((set, get) => ({
   dashboardActivities: [],
 
   // Pagination meta cho từng list
-  usersMeta:     { ...DEFAULT_META },
-  postsMeta:     { ...DEFAULT_META },
+  usersMeta: { ...DEFAULT_META },
+  postsMeta: { ...DEFAULT_META },
   campaignsMeta: { ...DEFAULT_META },
 
   // Summary tổng thể (không phụ thuộc page hiện tại)
-  usersSummary:     { total: 0, user: 0, org: 0, blocked: 0 },
-  postsSummary:     { total: 0, cho: 0, nhan: 0, vi_pham: 0 },
+  usersSummary: { total: 0, user: 0, org: 0, blocked: 0 },
+  postsSummary: { total: 0, cho: 0, nhan: 0, vi_pham: 0 },
   campaignsSummary: { total: 0, pending: 0, active: 0, completed: 0 },
 
   // Filter state cho từng list
-  usersParams:     { page: 1, per_page: 10, search: "", role: "", status: "" },
-  postsParams:     { page: 1, per_page: 10, search: "", loai_bai: "" },
+  usersParams: { page: 1, per_page: 10, search: "", role: "", status: "" },
+  postsParams: { page: 1, per_page: 10, search: "", loai_bai: "" },
   campaignsParams: { page: 1, per_page: 10, keyword: "", trang_thai: "" },
 
   loadingUsers: false,
@@ -63,13 +67,14 @@ const useAdminStore = create((set, get) => ({
 
   // ===== USERS =====
   fetchUsers: async (params = {}) => {
-    if (usersPromise) return usersPromise;
     const merged = { ...get().usersParams, ...params };
     const cleaned = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== "" && v !== null && v !== undefined));
     set({ loadingUsers: true, usersParams: merged });
+    const requestId = ++usersRequestId;
     usersPromise = (async () => {
       try {
         const res = await getAdminUsers(cleaned);
+        if (requestId !== usersRequestId) return;
         set({
           users: res.data || [],
           usersMeta: res.meta || { ...DEFAULT_META },
@@ -77,6 +82,7 @@ const useAdminStore = create((set, get) => ({
         });
       } catch (err) {
         console.error("Lỗi fetch users:", err);
+        if (requestId !== usersRequestId) return;
         set({ loadingUsers: false });
       } finally { usersPromise = null; }
     })();
@@ -93,9 +99,9 @@ const useAdminStore = create((set, get) => ({
       ]);
       set({
         usersSummary: {
-          total:   getTotal(allRes),
-          user:    getTotal(userRes),
-          org:     getTotal(orgRes),
+          total: getTotal(allRes),
+          user: getTotal(userRes),
+          org: getTotal(orgRes),
           blocked: getTotal(blockedRes),
         },
       });
@@ -122,23 +128,25 @@ const useAdminStore = create((set, get) => ({
 
   // ===== POSTS =====
   fetchPosts: async (params = {}) => {
-    if (postsPromise) return postsPromise;
     const merged = { ...get().postsParams, ...params };
     const cleaned = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== "" && v !== null && v !== undefined));
     set({ loadingPosts: true, postsParams: merged });
+    const requestId = ++postsRequestId;
     postsPromise = (async () => {
       try {
         const res = await getAdminPosts(cleaned);
+        if (requestId !== postsRequestId) return;
         const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
         const meta = res.meta || (res.data?.current_page ? {
           current_page: res.data.current_page,
-          per_page:     res.data.per_page,
-          total:        res.data.total,
-          last_page:    res.data.last_page,
+          per_page: res.data.per_page,
+          total: res.data.total,
+          last_page: res.data.last_page,
         } : { ...DEFAULT_META });
         set({ posts: list, postsMeta: meta, loadingPosts: false });
       } catch (err) {
         console.error(err);
+        if (requestId !== postsRequestId) return;
         set({ loadingPosts: false });
       } finally { postsPromise = null; }
     })();
@@ -154,12 +162,13 @@ const useAdminStore = create((set, get) => ({
         getAdminPostReports({ trang_thai: "CHO_XU_LY", limit: 100 }),
       ]);
       const reports = Array.isArray(reportsRes.data) ? reportsRes.data : (reportsRes.data?.data || []);
+      const postReports = reports.filter((r) => String(r.target_type || "").toUpperCase() === "POST");
       set({
         postsSummary: {
-          total:   getTotal(allRes),
-          cho:     getTotal(choRes),
-          nhan:    getTotal(nhanRes),
-          vi_pham: reports.length,
+          total: getTotal(allRes),
+          cho: getTotal(choRes),
+          nhan: getTotal(nhanRes),
+          vi_pham: postReports.length,
         },
       });
     } catch (err) { console.error("Lỗi fetch posts summary:", err); }
@@ -194,23 +203,25 @@ const useAdminStore = create((set, get) => ({
 
   // ===== CAMPAIGNS =====
   fetchCampaigns: async (params = {}) => {
-    if (campaignsPromise) return campaignsPromise;
     const merged = { ...get().campaignsParams, ...params };
     const cleaned = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== "" && v !== null && v !== undefined));
     set({ loadingCampaigns: true, campaignsParams: merged });
+    const requestId = ++campaignsRequestId;
     campaignsPromise = (async () => {
       try {
         const res = await getAdminCampaigns(cleaned);
+        if (requestId !== campaignsRequestId) return;
         const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
         const meta = res.meta || (res.current_page ? {
           current_page: res.current_page,
-          per_page:     res.per_page,
-          total:        res.total,
-          last_page:    res.last_page,
+          per_page: res.per_page,
+          total: res.total,
+          last_page: res.last_page,
         } : { ...DEFAULT_META });
         set({ campaigns: list, campaignsMeta: meta, loadingCampaigns: false });
       } catch (err) {
         console.error(err);
+        if (requestId !== campaignsRequestId) return;
         set({ loadingCampaigns: false });
       } finally { campaignsPromise = null; }
     })();
@@ -227,9 +238,9 @@ const useAdminStore = create((set, get) => ({
       ]);
       set({
         campaignsSummary: {
-          total:     getTotal(allRes),
-          pending:   getTotal(pendingRes),
-          active:    getTotal(activeRes),
+          total: getTotal(allRes),
+          pending: getTotal(pendingRes),
+          active: getTotal(activeRes),
           completed: getTotal(completedRes),
         },
       });
@@ -279,7 +290,7 @@ const useAdminStore = create((set, get) => ({
 
   fetchViolationSets: async () => {
     try {
-      const res = await getAdminPostReports({ trang_thai: "CHO_XU_LY", limit: 100 });
+      const res = await getAdminPostReports({ trang_thai: "CHO_XU_LY", limit: 1000 });
       const items = Array.isArray(res?.data) ? res.data : (res?.data?.data || []);
       const campSet = new Set();
       const postSet = new Set();
@@ -309,14 +320,28 @@ const useAdminStore = create((set, get) => ({
   // Duyệt 1 vi phạm: USER_REPORT dùng updateAdminPostReport, AI alert dùng updateFraudAlert
   resolveViolation: async (item, decision = "DA_XU_LY") => {
     try {
+      const payload =
+        decision && typeof decision === "object"
+          ? decision
+          : { trang_thai: decision };
+
       if (item.source === "USER_REPORT" && item.report_id) {
-        await updateAdminPostReport(item.report_id, decision);
-      } else if (item.alert_id) {
-        await updateFraudAlert(item.alert_id, {
-          trang_thai: decision === "DA_XU_LY" ? "DA_KIEM_TRA" : "CANH_BAO_SAI",
-        });
+        await updateAdminPostReport(item.report_id, payload.trang_thai);
       } else {
-        return false;
+        const alertId =
+          item.alert_id ??
+          (typeof item.id === "number" ? item.id : null);
+        if (!alertId) return false;
+
+        const data = {
+          trang_thai: payload.trang_thai,
+        };
+      
+        if (payload.decision) {
+          data.decision = payload.decision;
+        }
+      
+        await updateFraudAlert(alertId, data);
       }
       // Refresh violation sets
       await get().fetchViolationSets();
@@ -350,19 +375,30 @@ const useAdminStore = create((set, get) => ({
   },
 
   // ===== FRAUD =====
-  fetchFraudAlerts: async () => {
-    if (get().isFetchedFraud) return;
+  fetchFraudAlerts: async (force = false) => {
+    if (!force && get().isFetchedFraud) return;
+  
     if (fraudPromise) return fraudPromise;
+  
     set({ loadingFraud: true });
+  
     fraudPromise = (async () => {
       try {
         const res = await getFraudAlerts();
-        set({ fraudAlerts: res.data || [], loadingFraud: false, isFetchedFraud: true });
+  
+        set({
+          fraudAlerts: res.data || [],
+          loadingFraud: false,
+          isFetchedFraud: true,
+        });
       } catch (err) {
         console.error(err);
         set({ loadingFraud: false });
-      } finally { fraudPromise = null; }
+      } finally {
+        fraudPromise = null;
+      }
     })();
+  
     return fraudPromise;
   },
 

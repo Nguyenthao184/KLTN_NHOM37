@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  FiMenu, FiX, FiBell, FiSearch, FiLogOut,
-  FiChevronRight, FiGrid, FiUsers, FiFolder, FiFileText, FiHome, FiDollarSign,
+  FiMenu, FiX, FiSearch, FiLogOut,
+  FiChevronRight, FiGrid, FiUsers, FiFolder, FiFileText, FiHome,
+  FiShield,
 } from "react-icons/fi";
 import useAuthStore from "../../../store/authStore";
 import { logoutAPI } from "../../../api/authService";
@@ -10,7 +11,8 @@ import Dashboard from "../Dashboard/Dashboard";
 import Users from "../Users/Users";
 import Projects from "../Projects/Projects";
 import Posts from "../Posts/Posts";
-import Withdrawals from "../Withdrawals/Withdrawals";
+import FraudAlerts from "../FraudAlerts/FraudAlerts";
+import NotificationDropdown from "../../../components/NotificationDropdown";
 import "./AdminPanel.scss";
 
 const NAV_ITEMS = [
@@ -26,6 +28,7 @@ const NAV_ITEMS = [
       { key: "users",    icon: <FiUsers size={20} />,    label: "Người dùng", path: "/admin/users" },
       { key: "projects", icon: <FiFolder size={20} />,   label: "Chiến dịch", path: "/admin/projects" },
       { key: "posts",    icon: <FiFileText size={20} />, label: "Bài đăng",   path: "/admin/posts" },
+      { key: "fraud-alerts", icon: <FiShield size={20} />, label: "Cảnh báo gian lận", path: "/admin/fraud-alerts" },
     ],
   },
   {
@@ -36,7 +39,7 @@ const NAV_ITEMS = [
   },
 ];
 
-const COMPONENTS = { dashboard: Dashboard, users: Users, projects: Projects, posts: Posts, withdrawals: Withdrawals };
+const COMPONENTS = { dashboard: Dashboard, users: Users, projects: Projects, posts: Posts, "fraud-alerts": FraudAlerts };
 
 export default function AdminPanel() {
   const [sidebarOpen, setSidebarOpen]   = useState(false);
@@ -57,7 +60,7 @@ export default function AdminPanel() {
   const isAdmin = Array.isArray(storeRoles)
     ? storeRoles.some((r) => r === "ADMIN" || r?.ten === "ADMIN" || r?.ten_vai_tro === "ADMIN")
     : false;
-
+    
   // Bảo vệ route: non-admin bị redirect về trang chủ
   useEffect(() => {
     if (storeRoles.length > 0 && !isAdmin) {
@@ -65,7 +68,7 @@ export default function AdminPanel() {
     }
   }, [isAdmin, storeRoles]);
 
-  useEffect(() => {
+  useEffect(() => { 
     if (location.pathname === "/admin") navigate("/admin/dashboard", { replace: true });
   }, []);
 
@@ -160,10 +163,7 @@ export default function AdminPanel() {
           </div>
 
           <div className="adm__header-actions">
-            <button className="adm__header-btn">
-              <FiBell size={18} />
-              <span className="adm__header-notif" />
-            </button>
+            <NotificationDropdown triggerClassName="adm__header-btn" />
 
             {/* Avatar dropdown */}
             <div className="adm__avatar-wrap" ref={avatarRef}>
